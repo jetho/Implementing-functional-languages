@@ -72,7 +72,7 @@ pprExpr (ELam vars expr) =
 pprAlt (n, vars, expr) = 
         iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
                             iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-                            iStr "-> ", IIndent (pprExpr expr)] )
+                            iStr "-> ", iIndent (pprExpr expr)] )
 
 pprVars = map iStr
 
