@@ -52,8 +52,7 @@ pprExpr (ENum n) = iStr $ show n
 pprExpr (EVar v) = iStr v
 pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
 pprExpr (ELet isrec defns expr) =
-    iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline,
-              iStr "in ", pprExpr expr ]
+    iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline, iStr "in ", pprExpr expr ]
     where
     keyword | not isrec = "let"
             | isrec = "letrec"
@@ -72,8 +71,8 @@ pprExpr (ELam vars expr) =
 
 pprAlt (n, vars, expr) = 
         iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
-            iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-            iStr "-> ", IIndent (pprExpr expr)] )
+                            iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
+                            iStr "-> ", IIndent (pprExpr expr)] )
 
 pprVars = map iStr
 
