@@ -52,8 +52,8 @@ pprExpr (ENum n) = iStr $ show n
 pprExpr (EVar v) = iStr v
 pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
 pprExpr (ELet isrec defns expr) =
-    iConcat [ iStr keyword, iNewline, iIndent (pprDefns defns), iNewline, 
-              iStr "in ", iNewline, iIndent (pprExpr expr) ]
+    iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline, 
+              iStr "in ", iIndent (iNewline `iAppend` pprExpr expr) ]
     where
     keyword | not isrec = "let"
             | isrec = "letrec"
@@ -73,11 +73,11 @@ pprExpr (ELam vars expr) =
 pprAlt (n, vars, expr) = 
     iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
                         iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-                        iStr "-> ", iIndent (pprExpr expr)] )
+                        iStr "-> ", pprExpr expr] )
 
 pprVars = map iStr
 
-pprDefns = iInterleave sep . map pprDefn
+pprDefns = iAppend iNewline . iInterleave sep . map pprDefn
     where
     sep = iConcat [ iStr ";", iNewline ]
 
@@ -99,7 +99,7 @@ flatten col ((INewline, indent) : seqs) =
     '\n' : space indent ++ (flatten indent seqs)
 
 flatten col ((IIndent seq, indent) : seqs) = 
-    space indentation ++ flatten col ((seq, indentation) : seqs)
+    flatten col ((seq, indentation) : seqs)
     where 
     indentation = indent + 2
 
