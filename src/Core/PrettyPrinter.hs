@@ -23,7 +23,7 @@ iStr = iInterleave iNewline . map IStr . lines
 
 iAppend INil expr = expr
 iAppend expr INil = expr
-iAppend seq1 seq2	= IAppend seq1 seq2
+iAppend seq1 seq2 = IAppend seq1 seq2
 
 iIndent seq = IIndent seq
 
@@ -64,7 +64,7 @@ pprExpr (ELet isrec defns expr) =
             | isrec = "letrec"
 
 pprExpr (ECase expr alts) =
-    iConcat [iStr "case " , pprExpr expr, iStr " of", iNewline, pprAlts alts]
+    iConcat [iStr "case ", pprExpr expr, iStr " of", iNewline, pprAlts alts]
     where 
     pprAlts = iInterleave iNewline . map (iIndent . pprAlt)
     
