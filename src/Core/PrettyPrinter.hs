@@ -52,7 +52,8 @@ pprExpr (ENum n) = iStr $ show n
 pprExpr (EVar v) = iStr v
 pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
 pprExpr (ELet isrec defns expr) =
-    iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline, iStr "in ", pprExpr expr ]
+    iConcat [ iStr keyword, iNewline, iIndent (pprDefns defns), iNewline, 
+              iStr "in ", iNewline, iIndent (pprExpr expr) ]
     where
     keyword | not isrec = "let"
             | isrec = "letrec"
@@ -76,12 +77,12 @@ pprAlt (n, vars, expr) =
 
 pprVars = map iStr
 
-pprDefns = iAppend iNewline . iInterleave sep . map pprDefn
+pprDefns = iInterleave sep . map pprDefn
     where
     sep = iConcat [ iStr ";", iNewline ]
 
 pprDefn (name, expr) =
-    iConcat [ iStr name, iStr " = ", iIndent (pprExpr expr) ]
+    iConcat [ iStr name, iStr " = ", pprExpr expr ]
 
 pprAExpr e | isAtomicExpr e = pprExpr e
 pprAExpr e | otherwise = iStr "(" `iAppend` (pprExpr e) `iAppend` iStr ")"
@@ -94,17 +95,20 @@ iDisplay seq =  flatten 0 [(seq, 0)]
 flatten :: Int -> [(Iseq, Int)] -> String
 flatten _ [] = ""
 
-flatten col ((INewline, indent) : seqs) = '\n' : space col ++ (flatten indent seqs)
+flatten col ((INewline, indent) : seqs) = 
+    '\n' : space indent ++ (flatten indent seqs)
 
 flatten col ((IIndent seq, indent) : seqs) = 
-    space col ++ flatten (col+2) ((seq, indent) : seqs )
+    space indentation ++ flatten col ((seq, indentation) : seqs)
+    where 
+    indentation = indent + 2
 
 flatten col (((IAppend seq1 seq2), indent) : seqs) =
-    (flatten col [(seq1, indent)]) ++ (flatten col [(seq2, indent)]) ++ (flatten col seqs)
+    flatten col ((seq1, indent) : (seq2, indent) : seqs)
 
 flatten col ((IStr str, indent) : seqs) = str ++ (flatten col seqs)
 
-flatten col ((INil, indent) : seqs) = (flatten col seqs)
+flatten col ((INil, indent) : seqs) = flatten col seqs
 
 space = flip replicate ' ' 
 
