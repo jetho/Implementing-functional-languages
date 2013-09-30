@@ -45,7 +45,7 @@ pprint = iDisplay . pprProgram
 pprProgram  = iInterleave iNewline . map superCombinator
     where
     superCombinator (name, args, expr) =
-        iConcat [ (iStr name), pprArgs args, iStr "= ", pprExpr expr, iStr ";"]
+        iConcat [ (iStr name), pprArgs args, iStr "= ", pprExpr expr, iStr ";" ]
     pprArgs = iEnclose (iStr " ") . iInterleave (iStr " ") . pprVars
 
 pprExpr (ENum n) = iStr $ show n
@@ -59,13 +59,13 @@ pprExpr (ELet isrec defns expr) =
             | isrec = "letrec"
 
 pprExpr (ECase expr alts) =
-    iConcat [iStr "case ", pprExpr expr, iStr " of", iIndent (pprAlts alts)]
+    iConcat [ iStr "case ", pprExpr expr, iStr " of", iIndent (pprAlts alts) ]
     where 
     pprAlts = iAppend iNewline . iInterleave iNewline . map pprAlt
 
 pprExpr (ELam [] expr) = pprExpr expr
 pprExpr (ELam vars expr) = 
-    iConcat [iStr "( \\ ", iInterleave (iStr ", ") (pprVars vars), iStr " . ", pprExpr expr , iStr " )"]
+    iConcat [ iStr "( \\ ", iInterleave (iStr ", ") (pprVars vars), iStr " . ", pprExpr expr , iStr " )" ]
 
 
 -- helper functions for transforming the AST
@@ -73,7 +73,7 @@ pprExpr (ELam vars expr) =
 pprAlt (n, vars, expr) = 
     iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
                         iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-                        iStr "-> ", pprExpr expr] )
+                        iStr "-> ", iIndent (pprExpr expr) ])
 
 pprVars = map iStr
 
@@ -82,7 +82,7 @@ pprDefns = iAppend iNewline . iInterleave sep . map pprDefn
     sep = iConcat [ iStr ";", iNewline ]
 
 pprDefn (name, expr) =
-    iConcat [ iStr name, iStr " = ", pprExpr expr ]
+    iConcat [ iStr name, iStr " = ", iIndent (pprExpr expr) ]
 
 pprAExpr e | isAtomicExpr e = pprExpr e
 pprAExpr e | otherwise = iStr "(" `iAppend` (pprExpr e) `iAppend` iStr ")"
