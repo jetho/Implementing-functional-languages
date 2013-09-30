@@ -15,7 +15,7 @@ data Iseq = INil
 
 
 -- constructor functions
---
+
 iNil = INil
 
 -- take care of newlines when wrapping a string
@@ -41,7 +41,7 @@ iEnclose s content = s `iAppend` content `iAppend` s
 
 
 -- pretty print the AST  
---
+
 pprint :: CoreProgram -> String
 pprint = iDisplay . pprProgram
 
@@ -75,8 +75,8 @@ pprExpr (ELam vars expr) =
 
 
 
--- helper functions for converting the AST
---
+-- helper functions for transforming the AST
+
 pprAlt (n, vars, expr) = 
         iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
             iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
@@ -97,7 +97,7 @@ pprAExpr e | otherwise = iStr "(" `iAppend` (pprExpr e) `iAppend` iStr ")"
 
 
 -- flattening the pretty printing structure
---
+
 iDisplay seq =  flatten 0 [(seq, 0)]
 
 
