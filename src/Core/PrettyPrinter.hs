@@ -4,7 +4,6 @@ where
 import Data.List
 import Language
 
-
 -- data type for the pretty printer
 data Iseq = INil
           | IStr String
@@ -13,9 +12,7 @@ data Iseq = INil
           | INewline 
           deriving Show
 
-
 -- constructor functions
-
 iNil = INil
 
 -- take care of newlines when wrapping a string
@@ -40,18 +37,16 @@ iEnclose s INil = s
 iEnclose s content = s `iAppend` content `iAppend` s
 
 
--- pretty print the AST  
+-- pretty printing the AST  
 
 pprint :: CoreProgram -> String
 pprint = iDisplay . pprProgram
-
 
 pprProgram  = iInterleave iNewline . map superCombinator
     where
     superCombinator (name, args, expr) =
         iConcat [ (iStr name), pprArgs args, iStr "= ", pprExpr expr, iStr ";"]
     pprArgs = iEnclose (iStr " ") . iInterleave (iStr " ") . pprVars
-
 
 pprExpr (ENum n) = iStr $ show n
 pprExpr (EVar v) = iStr v
@@ -67,12 +62,10 @@ pprExpr (ECase expr alts) =
     iConcat [iStr "case ", pprExpr expr, iStr " of", iNewline, pprAlts alts]
     where 
     pprAlts = iInterleave iNewline . map (iIndent . pprAlt)
-    
 
 pprExpr (ELam [] expr) = pprExpr expr
 pprExpr (ELam vars expr) = 
     iConcat [iStr "( \\ ", iInterleave (iStr ", ") (pprVars vars), iStr " . ", pprExpr expr , iStr " )"]
-
 
 
 -- helper functions for transforming the AST
@@ -95,11 +88,9 @@ pprAExpr e | isAtomicExpr e = pprExpr e
 pprAExpr e | otherwise = iStr "(" `iAppend` (pprExpr e) `iAppend` iStr ")"
 
 
-
 -- flattening the pretty printing structure
 
 iDisplay seq =  flatten 0 [(seq, 0)]
-
 
 flatten :: Int -> [(Iseq, Int)] -> String
 flatten _ [] = ""
