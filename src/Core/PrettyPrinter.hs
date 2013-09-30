@@ -71,9 +71,9 @@ pprExpr (ELam vars expr) =
 -- helper functions for transforming the AST
 
 pprAlt (n, vars, expr) = 
-        iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
-                            iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-                            iStr "-> ", iIndent (pprExpr expr)] )
+    iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
+                        iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
+                        iStr "-> ", iIndent (pprExpr expr)] )
 
 pprVars = map iStr
 
