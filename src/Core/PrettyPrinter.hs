@@ -106,5 +106,5 @@ flatten col ((IStr str, indent) : seqs) = str ++ (flatten col seqs)
 
 flatten col ((INil, indent) : seqs) = (flatten col seqs)
 
-space n = take n $ repeat ' ' 
+space = flip replicate ' ' 
 
