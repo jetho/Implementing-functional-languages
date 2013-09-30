@@ -26,7 +26,7 @@ iIndent seq = IIndent seq
 
 iNewline = INewline
 
-iConcat = foldl' iAppend iNil
+iConcat = foldr iAppend iNil
 
 iInterleave sep [] = iNil
 iInterleave sep (x:xs) = x `iAppend` (foldr combine iNil xs)
