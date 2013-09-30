@@ -52,16 +52,16 @@ pprExpr (ENum n) = iStr $ show n
 pprExpr (EVar v) = iStr v
 pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
 pprExpr (ELet isrec defns expr) =
-    iConcat [ iStr keyword, iNewline, iIndent (pprDefns defns), iNewline,
+    iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline,
               iStr "in ", pprExpr expr ]
     where
     keyword | not isrec = "let"
             | isrec = "letrec"
 
 pprExpr (ECase expr alts) =
-    iConcat [iStr "case ", pprExpr expr, iStr " of", iNewline, pprAlts alts]
+    iConcat [iStr "case ", pprExpr expr, iStr " of", iIndent (pprAlts alts)]
     where 
-    pprAlts = iInterleave iNewline . map (iIndent . pprAlt)
+    pprAlts = iAppend iNewline . iInterleave iNewline . map pprAlt
 
 pprExpr (ELam [] expr) = pprExpr expr
 pprExpr (ELam vars expr) = 
@@ -73,16 +73,16 @@ pprExpr (ELam vars expr) =
 pprAlt (n, vars, expr) = 
         iIndent ( iConcat [ iStr "<", iStr $ show n, iStr ">" , 
             iEnclose (iStr " ") $ iInterleave (iStr " ") (pprVars vars), 
-            iStr "-> ", pprExpr expr] )
+            iStr "-> ", IIndent (pprExpr expr)] )
 
 pprVars = map iStr
 
-pprDefns = iInterleave sep . map (iIndent . pprDefn)
+pprDefns = iAppend iNewline . iInterleave sep . map pprDefn
     where
     sep = iConcat [ iStr ";", iNewline ]
 
 pprDefn (name, expr) =
-    iConcat [ iStr name, iStr " = ", pprExpr expr ]
+    iConcat [ iStr name, iStr " = ", iIndent (pprExpr expr) ]
 
 pprAExpr e | isAtomicExpr e = pprExpr e
 pprAExpr e | otherwise = iStr "(" `iAppend` (pprExpr e) `iAppend` iStr ")"
@@ -95,7 +95,7 @@ iDisplay seq =  flatten 0 [(seq, 0)]
 flatten :: Int -> [(Iseq, Int)] -> String
 flatten _ [] = ""
 
-flatten col ((INewline, indent) : seqs) = '\n' : (flatten indent seqs)
+flatten col ((INewline, indent) : seqs) = '\n' : space col ++ (flatten indent seqs)
 
 flatten col ((IIndent seq, indent) : seqs) = 
     space col ++ flatten (col+2) ((seq, indent) : seqs )
