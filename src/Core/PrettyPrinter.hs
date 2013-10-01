@@ -64,14 +64,14 @@ pprExpr (EAp e1 e2) = (pprExpr e1) `iAppend` (iStr " ") `iAppend` (pprAExpr e2)
 pprExpr (ELet isrec defns expr) =
     iConcat [ iStr keyword, iIndent (pprDefns defns), iNewline, 
               iStr "in ", iIndent (iNewline `iAppend` pprExpr expr) ]
-        where 
-            keyword | not isrec = "let"
-                    | isrec = "letrec"
+    where 
+        keyword | not isrec = "let"
+                | isrec = "letrec"
 
 pprExpr (ECase expr alts) =
     iConcat [ iStr "case ", pprExpr expr, iStr " of", iIndent (pprAlts alts) ]
-        where 
-            pprAlts = iAppend iNewline . iInterleave iNewline . map pprAlt
+    where 
+        pprAlts = iAppend iNewline . iInterleave iNewline . map pprAlt
 
 pprExpr (ELam [] expr) = pprExpr expr
 pprExpr (ELam vars expr) = 
@@ -110,8 +110,8 @@ flatten col ((INewline, indent) : seqs) =
 
 flatten col ((IIndent seq, indent) : seqs) = 
     flatten col ((seq, indentation) : seqs)
-        where 
-            indentation = indent + 2
+    where 
+        indentation = indent + 2
 
 flatten col (((IAppend seq1 seq2), indent) : seqs) =
     flatten col ((seq1, indent) : (seq2, indent) : seqs)
