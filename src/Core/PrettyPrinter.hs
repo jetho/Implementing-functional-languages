@@ -36,7 +36,7 @@ iFWNum width n = iStr (space (width - length digits) ++ digits)
 
 iLayn seqs = iConcat (map lay_item (zip [1..] seqs))
     where 
-    lay_item (n,seq) = iConcat [ iFWNum 4 n, iStr ") ", iIndent seq, iNewline]
+        lay_item (n,seq) = iConcat [ iFWNum 4 n, iStr ") ", iIndent seq, iNewline]
 
 iInterleave sep [] = iNil
 iInterleave sep (x:xs) = x `iAppend` (foldr combine iNil xs)
