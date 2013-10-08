@@ -57,7 +57,7 @@ clex' n (c:cs) = (n, [c]) : clex' n cs
 clex' _ [] = []
 
 
--- parsing functions
+-- parser combinators
 
 keywords = ["let", "letrec", "case", "in", "of" , "Pack"]
 
@@ -76,6 +76,10 @@ pVar :: Parser String
 pVar = pSat f
     where
         f tok@(c:cs) = (not $ tok `elem` keywords) && isAlpha c && all isIdChar cs
+
+-- parse Numbers
+pNum :: Parser Int
+pNum = flip pApply read $ pSat (all isDigit)
 
 -- parse Alternatives
 pAlt :: Parser a -> Parser a -> Parser a
@@ -112,9 +116,34 @@ pOneOrMore p = take 1 . pThen (:) p (pZeroOrMore p)
 pEmpty :: a -> Parser a
 pEmpty v toks = [(v, toks)]
 
+-- repetition with separator
+pOneOrMoreWithSep :: Parser a -> Parser b -> Parser [a]
+pOneOrMoreWithSep pRep pSep = pThen (:) pRep pRest
+    where
+        -- use (flip const) for filtering the separator tokens
+        pRest = pThen (flip const) pSep (pOneOrMoreWithSep pRep pSep) `pAlt` (pEmpty [])
+
 -- apply func to parse result by mapping func on 
 -- the fst part of the tuples (using Control.Arrow.first)
 pApply :: Parser a -> (a -> b) -> Parser b
 pApply p f = map (first f) . p 
 
-syntax = undefined
+
+-- parsing Core
+
+syntax :: [Token] -> CoreProgram
+syntax = take_first_parse . pProgram
+    where
+        take_first_parse ((prog, []) : rest) = prog
+        take_first_parse (parse : rest) = take_first_parse rest
+        take_first_parse _ = error "Syntax error"
+
+pProgram :: Parser CoreProgram
+pProgram = pOneOrMoreWithSep pSc (pLit ";")
+
+pSc :: Parser CoreScDefn
+pSc = pThen4 mk_sc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+    where
+        mk_sc name vars eq expr = (name, vars, expr)
+
+pExpr = undefined
