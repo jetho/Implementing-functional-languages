@@ -132,18 +132,64 @@ pApply p f = map (first f) . p
 -- parsing Core
 
 syntax :: [Token] -> CoreProgram
-syntax = take_first_parse . pProgram
+syntax = takeFirstParse . pProgram
     where
-        take_first_parse ((prog, []) : rest) = prog
-        take_first_parse (parse : rest) = take_first_parse rest
-        take_first_parse _ = error "Syntax error"
+        takeFirstParse ((prog, []) : rest) = prog
+        takeFirstParse (parse : rest) = takeFirstParse rest
+        takeFirstParse _ = error "Syntax error"
 
 pProgram :: Parser CoreProgram
 pProgram = pOneOrMoreWithSep pSc (pLit ";")
 
 pSc :: Parser CoreScDefn
-pSc = pThen4 mk_sc pVar (pZeroOrMore pVar) (pLit "=") pExpr
-    where
-        mk_sc name vars eq expr = (name, vars, expr)
+pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
 
-pExpr = undefined
+pExpr :: Parser CoreExpr
+pExpr = pThen4 mkLet (pLit "let" `pAlt` pLit "letrec") pDefns (pLit "in") pExpr 
+        `pAlt` pThen4 mkCase (pLit "case") pExpr (pLit "of") pAlts 
+        `pAlt` pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit ".") pExpr 
+        `pAlt` pAExpr
+
+pDefns = pOneOrMoreWithSep pDefn (pLit ";")
+
+pDefn = pThen3 mkDefn pVar (pLit "=") pExpr
+
+pAlts = pOneOrMoreWithSep pAlter (pLit ";")
+
+pAlter = pThen4 mkAlt pAltNum (pZeroOrMore pVar) (pLit "->") pExpr
+
+pAltNum = pThen3 mkAltNum (pLit "<") pNum (pLit ">")
+
+pAExpr = pVarExpr `pAlt` pNumExpr `pAlt` pConstr `pAlt` pParanExpr
+
+pVarExpr = pApply pVar EVar
+
+pNumExpr = pApply pNum ENum
+
+pConstr = pThen4 mkConstr (pLit "Pack{") pNum pNum (pLit "}")
+
+pParanExpr = pThen3 extractExpr (pLit "(") pExpr (pLit ")")
+    where
+        extractExpr _ e _ = e
+
+
+-- AST constructor functions
+
+mkSc name vars eq expr = (name, vars, expr)
+
+mkLet letType defns _ expr = ELet isRec defns expr
+    where
+        isRec = if letType == "let" then nonRecursive else recursive
+
+mkCase _ expr _ alts = ECase expr alts
+
+mkLambda _ vars _ expr = ELam vars expr
+
+mkDefn var _ expr = (var, expr)
+
+mkAlt tag vars _ expr = (tag, vars, expr)
+
+mkAltNum _ n _ = n
+
+mkConstr _ n1 n2 _ = EConstr n1 n2
+

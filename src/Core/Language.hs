@@ -31,8 +31,9 @@ nonRecursive = False
 bindersOf = map fst
 rhssOf = map snd
 
-isAtomicExpr (EVar v) = True
-isAtomicExpr (ENum n) = True
+isAtomicExpr (EVar _) = True
+isAtomicExpr (ENum _) = True
+isAtomicExpr (EConstr _ _) = True 
 isAtomicExpr _ = False
 
 
