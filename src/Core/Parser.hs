@@ -162,7 +162,7 @@ pLetType = (pLit "let" `pAlt` pLit "letrec") `pApply` isRec
 
 pDefns = pOneOrMoreWithSep pDefn (pLit ";")
 
-pDefn = pThen (,) pVar $ pLit "=" `pRight` pExpr
+pDefn = pThen (,) pVar (pLit "=" `pRight` pExpr)
 
 pCase = pThen ECase (pLit "case" `pRight` pExpr) (pLit "of" `pRight` pAlts)
         
