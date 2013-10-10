@@ -170,7 +170,7 @@ pAlts = pOneOrMoreWithSep pAlter (pLit ";")
 
 pAlter = pThen3 (,,) pAltNum (pZeroOrMore pVar) (pLit "->" `pRight` pExpr)
 
-pAltNum = (pLit "<") `pRight` (pNum `pLeft` pLit ">")
+pAltNum = pLit "<" `pRight` pNum `pLeft` pLit ">"
 
 pLam = pThen ELam (pLit "\\" `pRight` pOneOrMore pVar) (pLit "." `pRight` pExpr)
 
@@ -182,5 +182,5 @@ pNumExpr = pNum `pApply` ENum
 
 pConstr = pThen EConstr (pLit "Pack{" `pRight` pNum) (pNum `pLeft` pLit "}")
 
-pParanExpr = pLit "(" `pRight` (pExpr `pLeft` pLit ")")
+pParanExpr = pLit "(" `pRight` pExpr `pLeft` pLit ")"
 
