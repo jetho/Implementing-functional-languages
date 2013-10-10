@@ -9,6 +9,9 @@ import Control.Arrow
 type Token = (Int, String)
 type Parser a = [Token] -> [(a, [Token])]
 
+data PartialExpr = NoOp | FoundOp Name CoreExpr
+
+
 parse :: String -> CoreProgram
 parse = syntax . clex
 
@@ -16,6 +19,7 @@ parse = syntax . clex
 -- Lexer
 
 twoCharOps = ["==", "˜=", ">=", "<=", "->"]
+relOps = twoCharOps ++ ["<", ">"]
 
 isNewline = (== '\n')
 isWhiteSpace = flip elem " \t"
@@ -97,13 +101,6 @@ pThen3 combine p1 p2 p3 toks =
                                  (v2, toks2) <- p2 toks1,
                                  (v3, toks3) <- p3 toks2 ]
 
-pThen4 :: (a -> b -> c -> d -> e) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e
-pThen4 combine p1 p2 p3 p4 toks =
-   [ (combine v1 v2 v3 v4, toks4) | (v1, toks1) <- p1 toks,
-                                    (v2, toks2) <- p2 toks1,
-                                    (v3, toks3) <- p3 toks2,
-                                    (v4, toks4) <- p4 toks3 ]
-
 -- parse zero or more repetitions
 pZeroOrMore :: Parser a -> Parser [a]
 pZeroOrMore p = (pOneOrMore p) `pAlt` (pEmpty [])
@@ -151,7 +148,28 @@ pSc :: Parser CoreScDefn
 pSc = pThen3 (,,) pVar (pZeroOrMore pVar) (pLit "=" `pRight` pExpr)
 
 pExpr :: Parser CoreExpr
-pExpr = pLet `pAlt` pCase `pAlt` pLam `pAlt` pAExpr
+pExpr = pLet `pAlt` pCase `pAlt` pLam `pAlt` pExpr1 
+
+pExpr1 :: Parser CoreExpr
+pExpr1 = pThen assembleOp pExpr2 pExpr1c
+
+pExpr1c :: Parser PartialExpr
+pExpr1c = (pThen FoundOp (pLit "|") pExpr1) `pAlt` pEmpty NoOp
+
+pExpr2 = pThen assembleOp pExpr3 pExpr2c
+pExpr2c = (pThen FoundOp (pLit "&") pExpr2) `pAlt` pEmpty NoOp
+
+pExpr3 = pThen assembleOp pExpr4 pExpr3c
+pExpr3c = (pThen FoundOp pRelops pExpr4) `pAlt` pEmpty NoOp
+pRelops = pSat (`elem` relOps)
+
+pExpr4 = pThen assembleOp pExpr5 pExpr4c
+pExpr4c = (pThen FoundOp (pLit "+") pExpr4) `pAlt` (pThen FoundOp (pLit "-") pExpr5) `pAlt` (pEmpty NoOp)
+
+pExpr5 = pThen assembleOp pExpr6 pExpr5c
+pExpr5c = (pThen FoundOp (pLit "*") pExpr5) `pAlt` (pThen FoundOp (pLit "/") pExpr6) `pAlt` (pEmpty NoOp)
+
+pExpr6 = (pOneOrMore pAExpr) `pApply` mk_ap_chain
 
 pLet = pThen3 ELet pLetType pDefns (pLit "in" `pRight` pExpr)
 
@@ -183,4 +201,10 @@ pNumExpr = pNum `pApply` ENum
 pConstr = pThen EConstr (pLit "Pack{" `pRight` pNum) (pNum `pLeft` pLit "}")
 
 pParanExpr = pLit "(" `pRight` pExpr `pLeft` pLit ")"
+
+mk_ap_chain = foldl1 EAp
+
+assembleOp :: CoreExpr -> PartialExpr -> CoreExpr
+assembleOp e1 NoOp = e1
+assembleOp e1 (FoundOp op e2) = EAp (EAp (EVar op) e1) e2
 
