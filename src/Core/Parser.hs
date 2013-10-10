@@ -79,7 +79,7 @@ pVar = pSat f
 
 -- parse Numbers
 pNum :: Parser Int
-pNum = flip pApply read $ pSat (all isDigit)
+pNum = pSat (all isDigit) `pApply` read 
 
 -- parse Alternatives
 pAlt :: Parser a -> Parser a -> Parser a
@@ -128,6 +128,12 @@ pOneOrMoreWithSep pRep pSep = pThen (:) pRep pRest
 pApply :: Parser a -> (a -> b) -> Parser b
 pApply p f = map (first f) . p 
 
+-- sequence two parsers and skip the result of the second one 
+pLeft = pThen const
+
+-- sequence two parsers and skip the result of the first one
+pRight = pThen $ flip const
+
 
 -- parsing Core
 
@@ -142,54 +148,39 @@ pProgram :: Parser CoreProgram
 pProgram = pOneOrMoreWithSep pSc (pLit ";")
 
 pSc :: Parser CoreScDefn
-pSc = pThen4 mkSc pVar (pZeroOrMore pVar) (pLit "=") pExpr
+pSc = pThen3 (,,) pVar (pZeroOrMore pVar) (pLit "=" `pRight` pExpr)
 
 pExpr :: Parser CoreExpr
-pExpr = pThen4 mkLet (pLit "let" `pAlt` pLit "letrec") pDefns (pLit "in") pExpr 
-        `pAlt` pThen4 mkCase (pLit "case") pExpr (pLit "of") pAlts 
-        `pAlt` pThen4 mkLambda (pLit "\\") (pOneOrMore pVar) (pLit ".") pExpr 
-        `pAlt` pAExpr
+pExpr = pLet `pAlt` pCase `pAlt` pLam `pAlt` pAExpr
+
+pLet = pThen3 ELet pLetType pDefns (pLit "in" `pRight` pExpr)
+
+pLetType = (pLit "let" `pAlt` pLit "letrec") `pApply` isRec
+    where 
+        isRec "let" = nonRecursive
+        isRec "letrec" = recursive
 
 pDefns = pOneOrMoreWithSep pDefn (pLit ";")
 
-pDefn = pThen3 mkDefn pVar (pLit "=") pExpr
+pDefn = pThen (,) pVar $ pLit "=" `pRight` pExpr
 
+pCase = pThen ECase (pLit "case" `pRight` pExpr) (pLit "of" `pRight` pAlts)
+        
 pAlts = pOneOrMoreWithSep pAlter (pLit ";")
 
-pAlter = pThen4 mkAlt pAltNum (pZeroOrMore pVar) (pLit "->") pExpr
+pAlter = pThen3 (,,) pAltNum (pZeroOrMore pVar) (pLit "->" `pRight` pExpr)
 
-pAltNum = pThen3 mkAltNum (pLit "<") pNum (pLit ">")
+pAltNum = (pLit "<") `pRight` (pNum `pLeft` pLit ">")
+
+pLam = pThen ELam (pLit "\\" `pRight` pOneOrMore pVar) (pLit "." `pRight` pExpr)
 
 pAExpr = pVarExpr `pAlt` pNumExpr `pAlt` pConstr `pAlt` pParanExpr
 
-pVarExpr = pApply pVar EVar
+pVarExpr = pVar `pApply` EVar
 
-pNumExpr = pApply pNum ENum
+pNumExpr = pNum `pApply` ENum
 
-pConstr = pThen4 mkConstr (pLit "Pack{") pNum pNum (pLit "}")
+pConstr = pThen EConstr (pLit "Pack{" `pRight` pNum) (pNum `pLeft` pLit "}")
 
-pParanExpr = pThen3 extractExpr (pLit "(") pExpr (pLit ")")
-    where
-        extractExpr _ e _ = e
-
-
--- AST constructor functions
-
-mkSc name vars eq expr = (name, vars, expr)
-
-mkLet letType defns _ expr = ELet isRec defns expr
-    where
-        isRec = if letType == "let" then nonRecursive else recursive
-
-mkCase _ expr _ alts = ECase expr alts
-
-mkLambda _ vars _ expr = ELam vars expr
-
-mkDefn var _ expr = (var, expr)
-
-mkAlt tag vars _ expr = (tag, vars, expr)
-
-mkAltNum _ n _ = n
-
-mkConstr _ n1 n2 _ = EConstr n1 n2
+pParanExpr = pLit "(" `pRight` (pExpr `pLeft` pLit ")")
 
