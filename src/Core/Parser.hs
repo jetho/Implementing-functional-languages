@@ -1,7 +1,7 @@
-module Parser 
+module Core.Parser 
 where
 
-import Language
+import Core.Language
 import Data.Char
 import Control.Arrow
 

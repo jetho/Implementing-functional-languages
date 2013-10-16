@@ -1,4 +1,4 @@
-module Language
+module Core.Language
 where
 
 type Name = String

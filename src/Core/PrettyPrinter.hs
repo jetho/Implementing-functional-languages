@@ -1,8 +1,8 @@
-module PrettyPrinter
+module Core.PrettyPrinter
 where
 
+import Core.Language
 import Data.List
-import Language
 
 -- data type for the pretty printer
 data Iseq = INil
