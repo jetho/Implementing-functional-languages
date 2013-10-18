@@ -1,6 +1,14 @@
 module Evaluators.Utils where
 
-import Data.List (delete)
+import Data.Maybe (fromMaybe)
+
+
+-- size, available, allocated
+type Heap a = (Int, [Int], [(Int, a)])
+type Addr = Int
+type NameSupply = Int
+type ASSOC a b = [(a,b)]
+
 
 hInitial :: Heap a
 hInitial = (0, [1..], [])
@@ -15,11 +23,12 @@ hFree :: Heap a -> Addr -> Heap a
 hFree (size, free, cts) a = (size-1, a:free, remove cts a)
 
 hLookup :: Heap a -> Addr -> a
-hLookup (size, free, cts) a =
-   aLookup cts a (error ("can't find node " ++ showAddr a ++ " in heap"))
+hLookup (_, _, cts) a = aLookup cts a $ error msg
+    where 
+        msg = "Can't find node " ++ show a ++ " in heap"
 
 hAddresses :: Heap a -> [Addr]
-hAddresses (_, _, cts) = [addr | (addr, node) <- cts]
+hAddresses (_, _, cts) = map fst cts 
 
 hSize :: Heap a -> Int
 hSize (size, _, _) = size
@@ -28,7 +37,7 @@ hNull :: Addr
 hNull = 0
 
 isHNull :: Addr -> Bool
-isHNull a = a == hNull
+isHNull = (== hNull)
 
 remove :: [(Int, a)] -> Int -> [(Int, a)]
 remove [] a = error ("Attempt to update or free nonexistant address #" ++ shownum a)
@@ -36,29 +45,20 @@ remove ((a',n):cts) a
    | a == a' = cts
    | a /= a' = (a', n) : remove cts a
 
--- size, available, allocated
-type Heap a = (Int, [Int], [(Int, a)])
-type Addr = Int
-
 shownum :: Int -> String
-shownum n = show n
+shownum = show
 
 showAddr :: Addr -> String
-showAddr a = "#" ++ shownum a
+showAddr = ("#" ++) . shownum
 
-type ASSOC a b = [(a,b)]
-
--- ASSOC a b -> a -> continuation -> b
-aLookup [] k' def = def
-aLookup ((k,v):rest) k' def
-   | k == k' = v
-   | k /= k' = aLookup rest k' def
+aLookup :: Eq a => [(a,b)] -> a -> b -> b
+aLookup aList val defval = fromMaybe defval $ lookup val aList
 
 aDomain :: ASSOC a b -> [a]
-aDomain alist = [key | (key, _) <- alist]
+aDomain = map fst
 
 aRange :: ASSOC a b -> [b]
-aRange alist = [val | (key, val) <- alist]
+aRange = map snd
 
 aEmpty = []
 
@@ -73,6 +73,4 @@ makeName prefix ns = prefix ++ "_" ++ shownum ns
 
 initialNameSupply :: NameSupply
 initialNameSupply = 0
-
-type NameSupply = Int
 

@@ -4,6 +4,7 @@ where
 import Core.Language
 import Core.Parser
 import Evaluators.Utils
+import Data.List (mapAccumL)
 
 
 type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
@@ -17,6 +18,8 @@ data TiDump = DummyTiDump
 data Node = NAp Addr Addr 
             | NSupercomb Name [Name] CoreExpr 
             | NNum Int 
+
+extraPreludeDefs = []
 
 runProg :: String -> String
 runProg = showResults . eval . compile . parse
@@ -37,9 +40,13 @@ showResults = undefined
 
 initialTiDump = DummyTiDump
 
-buildInitialHeap = undefined 
+buildInitialHeap :: [CoreScDefn] -> (TiHeap, TiGlobals)
+buildInitialHeap = mapAccumL allocateSc hInitial
 
-extraPreludeDefs = []
+allocateSc :: TiHeap -> CoreScDefn -> (TiHeap, (Name, Addr))
+allocateSc heap (name, args, body) = (heap', (name, addr))
+    where
+        (heap', addr) = hAlloc heap (NSupercomb name args body)
 
 tiStatInitial :: TiStats
 tiStatInitial = 0
@@ -52,7 +59,4 @@ tiStatGetSteps = id
 
 applyToStats :: (TiStats -> TiStats) -> TiState -> TiState
 applyToStats stats_fun (stack, dump, heap, sc_defs, stats) = (stack, dump, heap, sc_defs, stats_fun stats)
-
-
-
 
