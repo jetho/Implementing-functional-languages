@@ -17,10 +17,9 @@ type TiStats = Int
 
 data TiDump = DummyTiDump
 
-data Node = NAp Addr Addr 
-            | NSupercomb Name [Name] CoreExpr 
-            | NNum Int 
-            | NInd Addr
+data Node = NAp Addr Addr
+            | NSupercomb Name [Name] CoreExpr
+            | NNum Int
 
 extraPreludeDefs = []
 
@@ -48,7 +47,7 @@ allocateSc heap (name, args, body) = (heap', (name, addr))
 
 eval :: TiState -> [TiState]
 eval state = state : rest_states
-    where 
+    where
         rest_states | tiFinal state = []
                     | otherwise = eval next_state
         next_state = doAdmin (step state)
@@ -58,7 +57,6 @@ step state = dispatch (hLookup heap (head stack))
         (stack, dump, heap, globals, stats) = state
         dispatch (NNum n) = numStep state n
         dispatch (NAp a1 a2) = apStep state a1 a2
-        dispatch (NInd a) = indStep state a
         dispatch (NSupercomb sc args body) = scStep state sc args body
 
 numStep :: TiState -> Int -> TiState
@@ -67,34 +65,29 @@ numStep state n = error "Number applied as a function!"
 apStep :: TiState -> Addr -> Addr -> TiState
 apStep (stack, dump, heap, globals, stats) a1 a2 = (a1 : stack, dump, heap, globals, stats)
 
-indStep :: TiState -> Addr -> TiState
-indStep (stack, dump, heap, globals, stats) a1 = (a1 : stack, dump, heap, globals, stats)
-
 scStep :: TiState -> Name -> [Name] -> CoreExpr -> TiState
-scStep (stack, dump, heap, globals, stats) sc_name arg_names body  
-    | length arg_names < length stack = (stack', dump, heap'', globals, stats)
+scStep (stack, dump, heap, globals, stats) sc_name arg_names body
+    | length arg_names < length stack = (new_stack, dump, new_heap, globals, stats)
     | otherwise = error $ "Not enough args for supercombinator " ++ sc_name
     where
-        (heap', result_addr) = instantiate body heap env
+        new_stack = result_addr : (drop (length arg_names+1) stack)
+        (new_heap, result_addr) = instantiate body heap env
         env = arg_bindings ++ globals
         arg_bindings = zip arg_names (getargs heap stack)
-        sHead : sTail = drop (length arg_names) stack
-        stack' = result_addr : sTail
-        heap'' = hUpdate heap' sHead $ NInd result_addr
-        
+
 getargs :: TiHeap -> TiStack -> [Addr]
 getargs heap (sc:stack) = map get_arg stack
-    where 
+    where
         get_arg addr = arg where (NAp fun arg) = hLookup heap addr
 
-instantiate :: CoreExpr -> TiHeap -> [(Name, Addr)] -> (TiHeap, Addr) 
+instantiate :: CoreExpr -> TiHeap -> [(Name, Addr)] -> (TiHeap, Addr)
 instantiate (ENum n) heap env = hAlloc heap $ NNum n
 instantiate (EAp e1 e2) heap env = hAlloc heap'' $ NAp a1 a2
-    where 
+    where
         (heap', a1) = instantiate e1 heap env
         (heap'', a2) = instantiate e2 heap' env
 instantiate (EVar v) heap env = (heap, aLookup env v $ error msg)
-    where 
+    where
         msg = "Undefined name " ++ show v
 instantiate (EConstr tag arity) heap env =
     instantiateConstr tag arity heap env
@@ -136,12 +129,12 @@ showState :: TiState -> Iseq
 showState (stack, dump, heap, globals, stats) = iConcat [ showStack heap stack, showHeap heap stack, iNewline ]
 
 showStack :: TiHeap -> TiStack -> Iseq
-showStack heap stack = 
+showStack heap stack =
     iConcat [ iStr "Stk [",
               iIndent (iInterleave iNewline (map show_stack_item stack)),
               iStr " ]" ]
     where
-        show_stack_item addr = 
+        show_stack_item addr =
             iConcat [ showFWAddr addr, iStr ": ",
                       showStkNode heap (hLookup heap addr) ]
 
@@ -158,7 +151,7 @@ showHeap heap stack
                 ]
 
 showStkNode :: TiHeap -> Node -> Iseq
-showStkNode heap (NAp fun_addr arg_addr) = 
+showStkNode heap (NAp fun_addr arg_addr) =
     iConcat [ iStr "NAp ", showFWAddr fun_addr,
               iStr " ", showFWAddr arg_addr, iStr " (",
               showNode (hLookup heap arg_addr), iStr ")" ]
@@ -167,8 +160,7 @@ showStkNode heap node = showNode node
 showNode :: Node -> Iseq
 showNode (NAp a1 a2) = iConcat [ iStr "NAp ", iStr (showAddr a1), iStr " ", iStr (showAddr a2) ]
 showNode (NSupercomb name args body) = iStr ("NSupercomb " ++ name)
-showNode (NNum n) = iStr "NNum " `iAppend` iNum n
-showNode (NInd a) = iStr "NInd " `iAppend` iStr (showAddr a)
+showNode (NNum n) = (iStr "NNum ") `iAppend` (iNum n)
   
 showFWAddr :: Addr -> Iseq
 showFWAddr addr = iStr (space (4 - length str) ++ str)
@@ -176,7 +168,7 @@ showFWAddr addr = iStr (space (4 - length str) ++ str)
         str = show addr
 
 showStats :: TiState -> Iseq
-showStats (stack, dump, heap, globals, stats) = 
+showStats (stack, dump, heap, globals, stats) =
     iConcat [ iNewline, iNewline, iStr "Total number of steps = ",
               iNum (tiStatGetSteps stats) ]
 
