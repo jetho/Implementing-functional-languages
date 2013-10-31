@@ -1,5 +1,0 @@
-let e1 = ELam ["x", "y"] (EAp (EAp (EVar "f") (EVar "x")) (EVar "y"))
-let e3 = ELet False [("h", e1), ("q", (ENum 1))] (EAp (EAp (EVar "compose") (EVar "h")) (EVar "q"))
-let e2 = ELam ["a", "b"] e3
-let e4 = ELet False [("h", e1), ("q", e2)] (EAp (EAp (EVar "compose") (EVar "h")) (EVar "q")) 
-putStrLn $ iDisplay $ pprExpr e4
