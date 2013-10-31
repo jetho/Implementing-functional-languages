@@ -180,17 +180,15 @@ showStack heap stack =
                       showStkNode heap (hLookup heap addr) ]
 
 showHeap :: TiHeap -> TiStack -> Iseq
-showHeap heap stack
-   = iConcat [ iNewline, iStr " Heap [",
-               iIndent (iInterleave iNewline (map show_heap_item $ reverseSort (hAddresses heap))),
-               iStr " ], Length: ",
-               iStr $ show $ hSize heap ]
-   where
-   reverseSort = reverse . sort
-   show_heap_item addr
-      = iConcat [ showFWAddr addr, iStr ": ",
-                  showStkNode heap (hLookup heap addr)
-                ]
+showHeap heap stack = 
+    iConcat [ iNewline, iStr " Heap [",
+              iIndent (iInterleave iNewline (map show_heap_item $ reverseSort (hAddresses heap))),
+              iStr " ], Length: ",
+              iStr $ show $ hSize heap ]
+    where
+        reverseSort = reverse . sort
+        show_heap_item addr = iConcat [ showFWAddr addr, iStr ": ",
+                                        showStkNode heap (hLookup heap addr) ]
 
 showStkNode :: TiHeap -> Node -> Iseq
 showStkNode heap (NAp fun_addr arg_addr) = 
