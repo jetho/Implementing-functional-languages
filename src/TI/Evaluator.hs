@@ -123,28 +123,29 @@ instantiate (ELet isRec defs body) heap env =
 instantiate (ECase e alts) heap env = error "Can’t instantiate case exprs"
 
 instantiateAndUpdate :: CoreExpr -> Addr -> TiHeap -> ASSOC Name Addr -> TiHeap
-instantiateAndUpdate (EVar v) upd_addr heap env =
-    hUpdate heap upd_addr $ NInd $ aLookup env v (error "Can't find var")
+instantiateAndUpdate (EVar v) upd_addr heap env = hUpdate heap upd_addr $ NInd $ aLookup env v $ error msg
+    where 
+        msg = "Undefined name " ++ show v
 instantiateAndUpdate (ENum n) upd_addr heap env = hUpdate heap upd_addr (NNum n)
 instantiateAndUpdate (EAp e1 e2) upd_addr heap env = hUpdate heap2 upd_addr (NAp a1 a2)
     where 
         (heap1, a1) = instantiate e1 heap env
         (heap2, a2) = instantiate e2 heap1 env
-instantiateAndUpdate letExpr@(ELet isrec defs body) upd_addr heap env =
-    hUpdate heap' upd_addr (NInd addr)
-    where
+instantiateAndUpdate letExpr@(ELet isrec defs body) upd_addr heap env = hUpdate heap' upd_addr (NInd addr)
+    where 
         (heap', addr) = instantiate letExpr heap env
 instantiateAndUpdate (ECase guard alts) upd_addr heap env = error "Can’t instantiate case exprs"
 
 instantiateDefs :: [(Name, CoreExpr)] -> TiHeap -> ASSOC Name Addr -> (TiHeap, ASSOC Name Addr)
 instantiateDefs xs heap env = foldr instantiateDef (heap, []) xs
-    where instantiateDef (name, expr) (heap', bindings) =
-              let (heap'', addr) = instantiate expr heap' env
-              in (heap'', (name, addr):bindings)
+    where 
+        instantiateDef (name, expr) (heap', bindings) =
+            let (heap'', addr) = instantiate expr heap' env
+            in (heap'', (name, addr) : bindings)
 
 instantiateLet :: IsRec -> [(Name, CoreExpr)] -> CoreExpr -> TiHeap -> ASSOC Name Addr -> (TiHeap, Addr)
 instantiateLet False defs body heap env = instantiate body heap' (bindings ++ env)
-    where
+    where 
         (heap', bindings) = instantiateDefs defs heap env
 
 instantiateLet True defs body heap env = instantiate body heap' env'
@@ -171,24 +172,19 @@ showState (stack, dump, heap, globals, stats) = iConcat [ showStack heap stack, 
 
 showStack :: TiHeap -> TiStack -> Iseq
 showStack heap stack = 
-    iConcat [ iStr "Stk [",
-              iIndent (iInterleave iNewline (map show_stack_item stack)),
-              iStr " ]" ]
+    iConcat [ iStr "Stk [", iIndent (iInterleave iNewline (map show_stack_item stack)), iStr " ]" ]
     where
         show_stack_item addr = 
-            iConcat [ showFWAddr addr, iStr ": ",
-                      showStkNode heap (hLookup heap addr) ]
+            iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
 
 showHeap :: TiHeap -> TiStack -> Iseq
 showHeap heap stack = 
     iConcat [ iNewline, iStr " Heap [",
               iIndent (iInterleave iNewline (map show_heap_item $ reverseSort (hAddresses heap))),
-              iStr " ], Length: ",
-              iStr $ show $ hSize heap ]
+              iStr " ], Length: ", iStr $ show $ hSize heap ]
     where
         reverseSort = reverse . sort
-        show_heap_item addr = iConcat [ showFWAddr addr, iStr ": ",
-                                        showStkNode heap (hLookup heap addr) ]
+        show_heap_item addr = iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
 
 showStkNode :: TiHeap -> Node -> Iseq
 showStkNode heap (NAp fun_addr arg_addr) = 
@@ -205,7 +201,7 @@ showNode (NInd a) = iStr "NInd " `iAppend` iStr (showAddr a)
   
 showFWAddr :: Addr -> Iseq
 showFWAddr addr = iStr (space (4 - length str) ++ str)
-    where
+    where 
         str = show addr
 
 showStats :: TiState -> Iseq
