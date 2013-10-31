@@ -6,7 +6,7 @@ import Core.Parser
 import Core.PrettyPrinter
 import Utils.Assoc
 import Utils.Heap
-import Data.List (mapAccumL)
+import Data.List (mapAccumL, sort)
 
 
 type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
@@ -14,13 +14,16 @@ type TiStack = [Addr]
 type TiHeap = Heap Node
 type TiGlobals = ASSOC Name Addr
 type TiStats = Int
-
-data TiDump = DummyTiDump
+type TiDump = [TiStack]
 
 data Node = NAp Addr Addr 
             | NSupercomb Name [Name] CoreExpr 
             | NNum Int 
             | NInd Addr
+            | NPrim Name Primitive
+
+data Primitive = Neg | Add | Sub | Mul | Div
+
 
 extraPreludeDefs = []
 
@@ -35,16 +38,30 @@ compile program = (initial_stack, initialTiDump, initial_heap, globals, tiStatIn
     initial_stack = [address_of_main]
     address_of_main = aLookup globals "main" (error "main is not defined")
 
-initialTiDump = DummyTiDump
+initialTiDump = []
 
 buildInitialHeap :: [CoreScDefn] -> (TiHeap, TiGlobals)
-buildInitialHeap = mapAccumL allocateSc hInitial
+buildInitialHeap sc_defs = (heap2, sc_addrs ++ prim_addrs)
+    where
+        (heap1, sc_addrs) = mapAccumL allocateSc hInitial sc_defs
+        (heap2, prim_addrs) = mapAccumL allocatePrim heap1 primitives
 
 allocateSc :: TiHeap -> CoreScDefn -> (TiHeap, (Name, Addr))
 allocateSc heap (name, args, body) = (heap', (name, addr))
     where
         (heap', addr) = hAlloc heap (NSupercomb name args body)
 
+allocatePrim :: TiHeap -> (Name, Primitive) -> (TiHeap, (Name, Addr))
+allocatePrim heap (name, prim) = (heap', (name, addr))
+    where
+        (heap', addr) = hAlloc heap (NPrim name prim)
+
+primitives :: ASSOC Name Primitive
+primitives = [ ]--1("negate", Neg),
+               --1("+", Add),
+               --1("-", Sub),
+               --1("*", Mul),
+               --1("/", Div) ]
 
 eval :: TiState -> [TiState]
 eval state = state : rest_states
@@ -60,6 +77,7 @@ step state = dispatch (hLookup heap (head stack))
         dispatch (NAp a1 a2) = apStep state a1 a2
         dispatch (NInd a) = indStep state a
         dispatch (NSupercomb sc args body) = scStep state sc args body
+     --   dispatch (NPrim name prim) = primStep state prim
 
 numStep :: TiState -> Int -> TiState
 numStep state n = error "Number applied as a function!"
@@ -68,20 +86,22 @@ apStep :: TiState -> Addr -> Addr -> TiState
 apStep (stack, dump, heap, globals, stats) a1 a2 = (a1 : stack, dump, heap, globals, stats)
 
 indStep :: TiState -> Addr -> TiState
-indStep (stack, dump, heap, globals, stats) a1 = (a1 : stack, dump, heap, globals, stats)
+indStep (a:as, dump, heap, globals, stats) a1 = (a1 : as, dump, heap, globals, stats)
 
 scStep :: TiState -> Name -> [Name] -> CoreExpr -> TiState
 scStep (stack, dump, heap, globals, stats) sc_name arg_names body  
-    | length arg_names < length stack = (stack', dump, heap'', globals, stats)
+    | length arg_names < length stack = (stack', dump, heap', globals, stats)
     | otherwise = error $ "Not enough args for supercombinator " ++ sc_name
     where
-        (heap', result_addr) = instantiate body heap env
+        heap' = instantiateAndUpdate body (stack !! length arg_names) heap env 
+        -- (heap', result_addr) = instantiate body heap env
         env = arg_bindings ++ globals
         arg_bindings = zip arg_names (getargs heap stack)
-        sHead : sTail = drop (length arg_names) stack
-        stack' = result_addr : sTail
-        heap'' = hUpdate heap' sHead $ NInd result_addr
-        
+        stack' = drop (length arg_names) stack
+       -- stack' = result_addr : sTail
+      --  heap'' = hUpdate heap' sHead $ NInd result_addr
+
+  
 getargs :: TiHeap -> TiStack -> [Addr]
 getargs heap (sc:stack) = map get_arg stack
     where 
@@ -101,6 +121,20 @@ instantiate (EConstr tag arity) heap env =
 instantiate (ELet isRec defs body) heap env =
     instantiateLet isRec defs body heap env
 instantiate (ECase e alts) heap env = error "Can’t instantiate case exprs"
+
+instantiateAndUpdate :: CoreExpr -> Addr -> TiHeap -> ASSOC Name Addr -> TiHeap
+instantiateAndUpdate (EVar v) upd_addr heap env =
+    hUpdate heap upd_addr $ NInd $ aLookup env v (error "Can't find var")
+instantiateAndUpdate (ENum n) upd_addr heap env = hUpdate heap upd_addr (NNum n)
+instantiateAndUpdate (EAp e1 e2) upd_addr heap env = hUpdate heap2 upd_addr (NAp a1 a2)
+    where 
+        (heap1, a1) = instantiate e1 heap env
+        (heap2, a2) = instantiate e2 heap1 env
+instantiateAndUpdate letExpr@(ELet isrec defs body) upd_addr heap env =
+    hUpdate heap' upd_addr (NInd addr)
+    where
+        (heap', addr) = instantiate letExpr heap env
+instantiateAndUpdate (ECase guard alts) upd_addr heap env = error "Can’t instantiate case exprs"
 
 instantiateDefs :: [(Name, CoreExpr)] -> TiHeap -> ASSOC Name Addr -> (TiHeap, ASSOC Name Addr)
 instantiateDefs xs heap env = foldr instantiateDef (heap, []) xs
@@ -148,10 +182,11 @@ showStack heap stack =
 showHeap :: TiHeap -> TiStack -> Iseq
 showHeap heap stack
    = iConcat [ iNewline, iStr " Heap [",
-               iIndent (iInterleave iNewline (map show_heap_item $ hAddresses heap)),
+               iIndent (iInterleave iNewline (map show_heap_item $ reverseSort (hAddresses heap))),
                iStr " ], Length: ",
                iStr $ show $ hSize heap ]
    where
+   reverseSort = reverse . sort
    show_heap_item addr
       = iConcat [ showFWAddr addr, iStr ": ",
                   showStkNode heap (hLookup heap addr)
