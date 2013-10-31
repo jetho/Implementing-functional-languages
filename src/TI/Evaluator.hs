@@ -174,8 +174,7 @@ showStack :: TiHeap -> TiStack -> Iseq
 showStack heap stack = 
     iConcat [ iStr "Stk [", iIndent (iInterleave iNewline (map show_stack_item stack)), iStr " ]" ]
     where
-        show_stack_item addr = 
-            iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
+        show_stack_item addr = iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
 
 showHeap :: TiHeap -> TiStack -> Iseq
 showHeap heap stack = 
@@ -200,14 +199,13 @@ showNode (NNum n) = iStr "NNum " `iAppend` iNum n
 showNode (NInd a) = iStr "NInd " `iAppend` iStr (showAddr a)
   
 showFWAddr :: Addr -> Iseq
-showFWAddr addr = iStr (space (4 - length str) ++ str)
+showFWAddr addr = iStr $ space (4 - length str) ++ str
     where 
         str = show addr
 
 showStats :: TiState -> Iseq
 showStats (stack, dump, heap, globals, stats) = 
-    iConcat [ iNewline, iNewline, iStr "Total number of steps = ",
-              iNum (tiStatGetSteps stats) ]
+    iConcat [ iNewline, iNewline, iStr "Total number of steps = ", iNum (tiStatGetSteps stats) ]
 
 showResults :: [TiState] -> String
 showResults states = iDisplay $ iConcat [ iLayn (map showState states), showStats (last states) ]
