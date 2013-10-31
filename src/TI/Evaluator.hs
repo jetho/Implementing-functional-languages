@@ -210,7 +210,7 @@ showStats (stack, dump, heap, globals, stats) =
               iNum (tiStatGetSteps stats) ]
 
 showResults :: [TiState] -> String
-showResults states = iDisplay (iConcat [ iLayn (map showState states), showStats (last states) ])
+showResults states = iDisplay $ iConcat [ iLayn (map showState states), showStats (last states) ]
 
 
 tiStatInitial :: TiStats
