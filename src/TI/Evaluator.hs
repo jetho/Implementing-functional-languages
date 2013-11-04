@@ -134,13 +134,12 @@ primNeg (stack, dump, heap, globals, stats)
         stack' = tail stack
         result_addr = head stack'
 
--- arithmetic
 primArith :: (Int -> Int -> Int) -> TiState -> TiState
 primArith op state =
-   primDyadic state (arithFun op)
-   where
-   arithFun op (NNum a) (NNum b) = (NNum (a `op` b))
-   arithFun op _ _ = error "Wrong data nodes"
+    primDyadic state (arithFun op)
+    where
+        arithFun op (NNum a) (NNum b) = (NNum (a `op` b))
+        arithFun op _ _ = error "Wrong data nodes"
 
 getArgs :: TiHeap -> TiStack -> [Addr]
 getArgs heap (sc:stack) = map get_arg stack
