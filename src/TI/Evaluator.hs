@@ -17,12 +17,14 @@ type TiStats = Int
 type TiDump = [TiStack]
 
 data Node = NAp Addr Addr 
-            | NSupercomb Name [Name] CoreExpr 
-            | NNum Int 
-            | NInd Addr
-            | NPrim Name Primitive
+          | NSupercomb Name [Name] CoreExpr 
+          | NNum Int 
+          | NInd Addr
+          | NPrim Name Primitive
+          | NData Int [Addr]
 
-data Primitive = Neg | Add | Sub | Mul | Div
+data Primitive = Neg | Add | Sub | Mul | Div | PrimConstr | If 
+               | Greater | GreaterEq | Less | LessEq | Eq | NotEq
 
 
 extraPreludeDefs = []
@@ -32,11 +34,11 @@ runProg = showResults . eval . compile . parse
 
 compile :: CoreProgram -> TiState
 compile program = (initial_stack, initialTiDump, initial_heap, globals, tiStatInitial)
-  where
-    sc_defs = program ++ preludeDefs ++ extraPreludeDefs
-    (initial_heap, globals) = buildInitialHeap sc_defs
-    initial_stack = [address_of_main]
-    address_of_main = aLookup globals "main" (error "main is not defined")
+    where
+        sc_defs = program ++ preludeDefs ++ extraPreludeDefs
+        (initial_heap, globals) = buildInitialHeap sc_defs
+        initial_stack = [address_of_main]
+        address_of_main = aLookup globals "main" (error "main is not defined")
 
 initialTiDump = []
 
@@ -61,7 +63,13 @@ primitives = [ ("negate", Neg),
                ("+", Add),
                ("-", Sub),
                ("*", Mul),
-               ("/", Div) ]
+               ("/", Div),
+               ("<", Less),
+               ("<=", LessEq),
+               (">", Greater),
+               (">=", GreaterEq),
+               ("==", Eq),
+               ("!=", NotEq) ]
 
 eval :: TiState -> [TiState]
 eval state = state : rest_states
@@ -69,6 +77,19 @@ eval state = state : rest_states
         rest_states | tiFinal state = []
                     | otherwise = eval next_state
         next_state = doAdmin (step state)
+
+tiFinal :: TiState -> Bool
+tiFinal ([sole_addr], [], heap, globals, stats) = isDataNode (hLookup heap sole_addr)
+tiFinal ([], dump, heap, globals, stats) = error "Empty stack!"
+tiFinal state = False
+
+isDataNode :: Node -> Bool
+isDataNode (NNum n) = True
+isDataNode (NData _ _) = True
+isDataNode node = False
+
+doAdmin :: TiState -> TiState
+doAdmin state = applyToStats tiStatIncSteps state
 
 step state = dispatch (hLookup heap (head stack))
     where
@@ -78,6 +99,7 @@ step state = dispatch (hLookup heap (head stack))
         dispatch (NInd a) = indStep state a
         dispatch (NSupercomb sc args body) = scStep state sc args body
         dispatch (NPrim name prim) = primStep prim state
+        dispatch (NData tag components) = dataStep state tag components
 
 numStep :: TiState -> Int -> TiState
 numStep ([_], stack:dump, heap, globals, stats) _ = (stack, dump, heap, globals, stats)
@@ -109,6 +131,9 @@ primStep Sub = primArith (-)
 primStep Mul = primArith (*)
 primStep Div = primArith div
 primStep _ = error "Unknown Primitive"
+
+dataStep :: TiState -> Int -> [Addr] -> TiState
+dataStep = undefined
 
 primDyadic :: TiState -> (Node -> Node -> Node) -> TiState
 primDyadic (stack@[a,a1,a2], dump, heap, globals, stats) op
@@ -194,17 +219,9 @@ instantiateLet True defs body heap env = instantiate body heap' env'
 
 instantiateConstr = undefined
 
-tiFinal :: TiState -> Bool
-tiFinal ([sole_addr], [], heap, globals, stats) = isDataNode (hLookup heap sole_addr)
-tiFinal ([], dump, heap, globals, stats) = error "Empty stack!"
-tiFinal state = False
 
-isDataNode :: Node -> Bool
-isDataNode (NNum n) = True
-isDataNode node = False
-
-doAdmin :: TiState -> TiState
-doAdmin state = applyToStats tiStatIncSteps state
+showResults :: [TiState] -> String
+showResults states = iDisplay $ iConcat [ iLayn (map showState states), showStats (last states) ]
 
 showState :: TiState -> Iseq
 showState (stack, dump, heap, globals, stats) =
@@ -246,6 +263,9 @@ showNode (NSupercomb name args body) = iStr ("NSupercomb " ++ name)
 showNode (NNum n) = iStr "NNum " `iAppend` iNum n
 showNode (NInd a) = iStr "NInd " `iAppend` iStr (showAddr a)
 showNode (NPrim name prim) = iStr ("Primitive: " ++ name) 
+showNode (NData tag addrs) = 
+    iConcat [ iStr ("NData: " ++ show tag ++ " "),
+              iInterleave (iStr " ") $ map (iStr . showAddr) addrs ] 
 
 showFWAddr :: Addr -> Iseq
 showFWAddr addr = iStr $ space (4 - length str) ++ str
@@ -255,9 +275,6 @@ showFWAddr addr = iStr $ space (4 - length str) ++ str
 showStats :: TiState -> Iseq
 showStats (stack, dump, heap, globals, stats) = 
     iConcat [ iNewline, iNewline, iStr "Total number of steps = ", iNum (tiStatGetSteps stats) ]
-
-showResults :: [TiState] -> String
-showResults states = iDisplay $ iConcat [ iLayn (map showState states), showStats (last states) ]
 
 
 tiStatInitial :: TiStats
