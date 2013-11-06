@@ -2,74 +2,10 @@ module TI.Evaluator
 where
 
 import Core.Language
-import Core.Parser
-import Core.PrettyPrinter
 import Utils.Assoc
 import Utils.Heap
-import Data.List (mapAccumL, sort)
+import TI.Types
 
-
-type TiState = (TiStack, TiDump, TiHeap, TiGlobals, TiStats)
-type TiStack = [Addr]
-type TiHeap = Heap Node
-type TiGlobals = ASSOC Name Addr
-type TiStats = Int
-type TiDump = [TiStack]
-
-data Node = NAp Addr Addr 
-          | NSupercomb Name [Name] CoreExpr 
-          | NNum Int 
-          | NInd Addr
-          | NPrim Name Primitive
-          | NData Int [Addr]
-
-data Primitive = Neg | Add | Sub | Mul | Div | PrimConstr | If 
-               | Greater | GreaterEq | Less | LessEq | Eq | NotEq
-
-
-extraPreludeDefs = []
-
-runProg :: String -> String
-runProg = showResults . eval . compile . parse
-
-compile :: CoreProgram -> TiState
-compile program = (initial_stack, initialTiDump, initial_heap, globals, tiStatInitial)
-    where
-        sc_defs = program ++ preludeDefs ++ extraPreludeDefs
-        (initial_heap, globals) = buildInitialHeap sc_defs
-        initial_stack = [address_of_main]
-        address_of_main = aLookup globals "main" (error "main is not defined")
-
-initialTiDump = []
-
-buildInitialHeap :: [CoreScDefn] -> (TiHeap, TiGlobals)
-buildInitialHeap sc_defs = (heap2, sc_addrs ++ prim_addrs)
-    where
-        (heap1, sc_addrs) = mapAccumL allocateSc hInitial sc_defs
-        (heap2, prim_addrs) = mapAccumL allocatePrim heap1 primitives
-
-allocateSc :: TiHeap -> CoreScDefn -> (TiHeap, (Name, Addr))
-allocateSc heap (name, args, body) = (heap', (name, addr))
-    where
-        (heap', addr) = hAlloc heap (NSupercomb name args body)
-
-allocatePrim :: TiHeap -> (Name, Primitive) -> (TiHeap, (Name, Addr))
-allocatePrim heap (name, prim) = (heap', (name, addr))
-    where
-        (heap', addr) = hAlloc heap (NPrim name prim)
-
-primitives :: ASSOC Name Primitive
-primitives = [ ("negate", Neg),
-               ("+", Add),
-               ("-", Sub),
-               ("*", Mul),
-               ("/", Div),
-               ("<", Less),
-               ("<=", LessEq),
-               (">", Greater),
-               (">=", GreaterEq),
-               ("==", Eq),
-               ("!=", NotEq) ]
 
 eval :: TiState -> [TiState]
 eval state = state : rest_states
@@ -220,72 +156,5 @@ instantiateLet True defs body heap env = instantiate body heap' env'
 instantiateConstr = undefined
 
 
-showResults :: [TiState] -> String
-showResults states = iDisplay $ iConcat [ iLayn (map showState states), showStats (last states) ]
-
-showState :: TiState -> Iseq
-showState (stack, dump, heap, globals, stats) =
-    iConcat [ showStack heap stack, showHeap heap stack, showDump heap stack dump, iNewline ]
-
-showStack :: TiHeap -> TiStack -> Iseq
-showStack heap stack = 
-    iConcat [ iStr "Stk [", iIndent (iInterleave iNewline (map show_stack_item stack)), iStr " ]" ]
-    where
-        show_stack_item addr = iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
-
-showHeap :: TiHeap -> TiStack -> Iseq
-showHeap heap stack = 
-    iConcat [ iNewline, iStr " Heap [",
-              iIndent (iInterleave iNewline (map show_heap_item $ reverseSort (hAddresses heap))),
-              iStr " ], Length: ", iStr $ show $ hSize heap ]
-    where
-        reverseSort = reverse . sort
-        show_heap_item addr = iConcat [ showFWAddr addr, iStr ": ", showStkNode heap (hLookup heap addr) ]
-
-showDump :: TiHeap -> TiStack -> TiDump -> Iseq
-showDump heap stack dump =
-    iConcat [ iNewline, iStr " Dump [",
-              iIndent ( iInterleave iNewline (map show_dump_item $ dump)),
-              iStr " ]"]
-    where
-        show_dump_item stk = showStack heap stk
-
-showStkNode :: TiHeap -> Node -> Iseq
-showStkNode heap (NAp fun_addr arg_addr) = 
-    iConcat [ iStr "NAp ", showFWAddr fun_addr,
-              iStr " ", showFWAddr arg_addr, iStr " (",
-              showNode (hLookup heap arg_addr), iStr ")" ]
-showStkNode heap node = showNode node
-
-showNode :: Node -> Iseq
-showNode (NAp a1 a2) = iConcat [ iStr "NAp ", iStr (showAddr a1), iStr " ", iStr (showAddr a2) ]
-showNode (NSupercomb name args body) = iStr ("NSupercomb " ++ name)
-showNode (NNum n) = iStr "NNum " `iAppend` iNum n
-showNode (NInd a) = iStr "NInd " `iAppend` iStr (showAddr a)
-showNode (NPrim name prim) = iStr ("Primitive: " ++ name) 
-showNode (NData tag addrs) = 
-    iConcat [ iStr ("NData: " ++ show tag ++ " "),
-              iInterleave (iStr " ") $ map (iStr . showAddr) addrs ] 
-
-showFWAddr :: Addr -> Iseq
-showFWAddr addr = iStr $ space (4 - length str) ++ str
-    where 
-        str = show addr
-
-showStats :: TiState -> Iseq
-showStats (stack, dump, heap, globals, stats) = 
-    iConcat [ iNewline, iNewline, iStr "Total number of steps = ", iNum (tiStatGetSteps stats) ]
-
-
-tiStatInitial :: TiStats
-tiStatInitial = 0
-
-tiStatIncSteps :: TiStats -> TiStats
-tiStatIncSteps = (+ 1)
-
-tiStatGetSteps :: TiStats -> Int
-tiStatGetSteps = id
-
 applyToStats :: (TiStats -> TiStats) -> TiState -> TiState
 applyToStats stats_fun (stack, dump, heap, sc_defs, stats) = (stack, dump, heap, sc_defs, stats_fun stats)
-
