@@ -27,7 +27,7 @@ data Primitive = Neg
                | Sub 
                | Mul 
                | Div 
-               | PrimConstr 
+               | PrimConstr Int Int
                | If 
                | Greater 
                | GreaterEq 
@@ -35,7 +35,7 @@ data Primitive = Neg
                | LessEq 
                | Eq 
                | NotEq
-
+               deriving (Show)
 
 
 tiStatIncSteps :: TiStats -> TiStats

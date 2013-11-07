@@ -30,16 +30,20 @@ doAdmin state = applyToStats tiStatIncSteps state
 step state = dispatch (hLookup heap (head stack))
     where
         (stack, dump, heap, globals, stats) = state
-        dispatch (NNum n) = numStep state n
+        dispatch (NNum n) = numStep state
         dispatch (NAp a1 a2) = apStep state a1 a2
         dispatch (NInd a) = indStep state a
         dispatch (NSupercomb sc args body) = scStep state sc args body
         dispatch (NPrim name prim) = primStep prim state
-        dispatch (NData tag components) = dataStep state tag components
+        dispatch (NData tag components) = dataStep state 
 
-numStep :: TiState -> Int -> TiState
-numStep ([_], stack:dump, heap, globals, stats) _ = (stack, dump, heap, globals, stats)
-numStep state n = error "Number applied as a function!"
+numStep :: TiState -> TiState
+numStep ([_], stack:dump, heap, globals, stats) = (stack, dump, heap, globals, stats)
+numStep _ = error "Number applied as a function!"
+
+dataStep :: TiState -> TiState
+dataStep ([_], (stack:dump), heap, globals, stats) = (stack, dump, heap, globals, stats)
+dataStep _ = error "Data applied as a function!"
 
 apStep :: TiState -> Addr -> Addr -> TiState
 apStep (stack, dump, heap, globals, stats) a1 a2 = 
@@ -66,10 +70,15 @@ primStep Add = primArith (+)
 primStep Sub = primArith (-)
 primStep Mul = primArith (*)
 primStep Div = primArith div
-primStep _ = error "Unknown Primitive"
-
-dataStep :: TiState -> Int -> [Addr] -> TiState
-dataStep = undefined
+primStep Greater = primCompare (>)
+primStep GreaterEq = primCompare (>=)
+primStep Less = primCompare (<)
+primStep LessEq = primCompare (<=)
+primStep Eq = primCompare (==)
+primStep NotEq = primCompare (/=)
+primStep (PrimConstr t a) = primConstr t a
+primStep If = primIf 
+primStep unknown = error $ "Unknown Primitive: " ++ show unknown
 
 primDyadic :: TiState -> (Node -> Node -> Node) -> TiState
 primDyadic (stack@[a,a1,a2], dump, heap, globals, stats) op
@@ -102,6 +111,26 @@ primArith op state =
         arithFun op (NNum a) (NNum b) = (NNum (a `op` b))
         arithFun op _ _ = error "Wrong data nodes"
 
+primCompare :: (Int -> Int -> Bool) -> TiState -> TiState
+primCompare op state@(_, _, heap, env, _) = primDyadic state cmpFun
+    where 
+        cmpFun (NNum n1) (NNum n2) = hLookup heap addr
+            where 
+                addr = aLookup env boolRes $ error $ boolRes ++ " is not defined"
+                boolRes = if op n1 n2 then "True" else "False"
+
+primConstr :: Int -> Int -> TiState -> TiState
+primConstr t a (stack, dump, heap, globals, stats)
+    | length stack <= a = error $ "Type error: Pack{" ++ show t ++ "," ++ show a ++ "} is applied to too few arguments."
+    | otherwise = (stack', dump, heap', globals, stats)
+    where 
+        components = take a $ getArgs heap stack
+        stack' = drop a stack
+        heap' = hUpdate heap result_addr $ NData t components
+        result_addr = head stack'
+
+primIf = undefined
+
 getArgs :: TiHeap -> TiStack -> [Addr]
 getArgs heap (sc:stack) = map get_arg stack
     where 
@@ -117,7 +146,7 @@ instantiate (EVar v) heap env = (heap, aLookup env v $ error msg)
     where 
         msg = "Undefined name " ++ show v
 instantiate (EConstr tag arity) heap env =
-    instantiateConstr tag arity heap env
+    instantiateConstr tag arity heap 
 instantiate (ELet isRec defs body) heap env =
     instantiateLet isRec defs body heap env
 instantiate (ECase e alts) heap env = error "Can’t instantiate case exprs"
@@ -127,6 +156,8 @@ instantiateAndUpdate (EVar v) upd_addr heap env = hUpdate heap upd_addr $ NInd $
     where 
         msg = "Undefined name " ++ show v
 instantiateAndUpdate (ENum n) upd_addr heap env = hUpdate heap upd_addr (NNum n)
+instantiateAndUpdate (EConstr tag arity) upd_addr heap env =
+        hUpdate heap upd_addr $ NPrim "Pack" $ PrimConstr tag arity
 instantiateAndUpdate (EAp e1 e2) upd_addr heap env = hUpdate heap2 upd_addr (NAp a1 a2)
     where 
         (heap1, a1) = instantiate e1 heap env
@@ -153,7 +184,9 @@ instantiateLet True defs body heap env = instantiate body heap' env'
         (heap', bindings) = instantiateDefs defs heap env'
         env' = bindings ++ env
 
-instantiateConstr = undefined
+instantiateConstr :: Int -> Int -> TiHeap -> (TiHeap, Addr)
+instantiateConstr tag arity heap = 
+    hAlloc heap $ NPrim "Pack" $ PrimConstr tag arity
 
 
 applyToStats :: (TiStats -> TiStats) -> TiState -> TiState
