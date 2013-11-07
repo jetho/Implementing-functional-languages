@@ -157,7 +157,7 @@ instantiateAndUpdate (EVar v) upd_addr heap env = hUpdate heap upd_addr $ NInd $
         msg = "Undefined name " ++ show v
 instantiateAndUpdate (ENum n) upd_addr heap env = hUpdate heap upd_addr (NNum n)
 instantiateAndUpdate (EConstr tag arity) upd_addr heap env =
-        hUpdate heap upd_addr $ NPrim "Pack" $ PrimConstr tag arity
+    hUpdate heap upd_addr $ NPrim "Pack" $ PrimConstr tag arity
 instantiateAndUpdate (EAp e1 e2) upd_addr heap env = hUpdate heap2 upd_addr (NAp a1 a2)
     where 
         (heap1, a1) = instantiate e1 heap env
@@ -185,8 +185,7 @@ instantiateLet True defs body heap env = instantiate body heap' env'
         env' = bindings ++ env
 
 instantiateConstr :: Int -> Int -> TiHeap -> (TiHeap, Addr)
-instantiateConstr tag arity heap = 
-    hAlloc heap $ NPrim "Pack" $ PrimConstr tag arity
+instantiateConstr tag arity heap = hAlloc heap $ NPrim "Pack" $ PrimConstr tag arity
 
 
 applyToStats :: (TiStats -> TiStats) -> TiState -> TiState
