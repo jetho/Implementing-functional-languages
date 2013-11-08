@@ -1,0 +1,354 @@
+   1) Stk [   2: NSupercomb main ]
+   Heap [  13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NSupercomb main
+       1: NSupercomb double ], Length: 13
+   Dump [ ]
+  
+   2) Stk [   2: NAp    1   15 (NAp #3 #14) ]
+   Heap [  15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp    1   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 15
+   Dump [ ]
+  
+   3) Stk [   1: NSupercomb double
+       2: NAp    1   15 (NAp #3 #14) ]
+   Heap [  15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp    1   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 15
+   Dump [ ]
+  
+   4) Stk [   2: NAp   16   15 (NAp #3 #14) ]
+   Heap [  16: NAp   10   15 (NAp #3 #14)
+      15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+   5) Stk [  16: NAp   10   15 (NAp #3 #14)
+       2: NAp   16   15 (NAp #3 #14) ]
+   Heap [  16: NAp   10   15 (NAp #3 #14)
+      15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+   6) Stk [  10: Primitive: +
+      16: NAp   10   15 (NAp #3 #14)
+       2: NAp   16   15 (NAp #3 #14) ]
+   Heap [  16: NAp   10   15 (NAp #3 #14)
+      15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+   7) Stk [  15: NAp    3   14 (NNum 4) ]
+   Heap [  16: NAp   10   15 (NAp #3 #14)
+      15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [  15: NAp    3   14 (NNum 4) ]
+    Stk [   2: NAp   16   15 (NAp #3 #14) ] ]
+  
+   8) Stk [   3: NSupercomb I
+      15: NAp    3   14 (NNum 4) ]
+   Heap [  16: NAp   10   15 (NAp #3 #14)
+      15: NAp    3   14 (NNum 4)
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NAp #3 #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [  15: NAp    3   14 (NNum 4) ]
+    Stk [   2: NAp   16   15 (NAp #3 #14) ] ]
+  
+   9) Stk [  15: NInd #14 ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NInd #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [  15: NInd #14 ]
+    Stk [   2: NAp   16   15 (NInd #14) ] ]
+  
+  10) Stk [  14: NNum 4 ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NInd #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [  15: NInd #14 ]
+    Stk [   2: NAp   16   15 (NInd #14) ] ]
+  
+  11) Stk [  15: NInd #14 ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NInd #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [   2: NAp   16   15 (NInd #14) ] ]
+  
+  12) Stk [  14: NNum 4 ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NInd #14)
+       1: NSupercomb double ], Length: 16
+   Dump [Stk [   2: NAp   16   15 (NInd #14) ] ]
+  
+  13) Stk [   2: NAp   16   15 (NInd #14) ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   15 (NInd #14)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+  14) Stk [   2: NAp   16   14 (NNum 4) ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   14 (NNum 4)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+  15) Stk [  16: NAp   10   15 (NInd #14)
+       2: NAp   16   14 (NNum 4) ]
+   Heap [  16: NAp   10   15 (NInd #14)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   14 (NNum 4)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+  16) Stk [  16: NAp   10   14 (NNum 4)
+       2: NAp   16   14 (NNum 4) ]
+   Heap [  16: NAp   10   14 (NNum 4)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   14 (NNum 4)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+  17) Stk [  10: Primitive: +
+      16: NAp   10   14 (NNum 4)
+       2: NAp   16   14 (NNum 4) ]
+   Heap [  16: NAp   10   14 (NNum 4)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NAp   16   14 (NNum 4)
+       1: NSupercomb double ], Length: 16
+   Dump [ ]
+  
+  18) Stk [  17: NNum 8 ]
+   Heap [  17: NNum 8
+      16: NAp   10   14 (NNum 4)
+      15: NInd #14
+      14: NNum 4
+      13: Primitive: /
+      12: Primitive: *
+      11: Primitive: -
+      10: Primitive: +
+       9: Primitive: negate
+       8: NSupercomb twice
+       7: NSupercomb compose
+       6: NSupercomb S
+       5: NSupercomb K1
+       4: NSupercomb K
+       3: NSupercomb I
+       2: NNum 8
+       1: NSupercomb double ], Length: 17
+   Dump [ ]
+  
+
+
+Total number of steps = 17

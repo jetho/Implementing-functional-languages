@@ -1,0 +1,113 @@
+   1) Stk [   2: NSupercomb main ]
+   Heap [   9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NSupercomb main
+       1: NSupercomb f ], Length: 9
+  
+   2) Stk [  10: NAp    1    3 (NSupercomb y) ]
+   Heap [  10: NAp    1    3 (NSupercomb y)
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 10
+  
+   3) Stk [   1: NSupercomb f
+      10: NAp    1    3 (NSupercomb y) ]
+   Heap [  10: NAp    1    3 (NSupercomb y)
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 10
+  
+   4) Stk [  12: NAp   11    3 (NSupercomb y) ]
+   Heap [  12: NAp   11    3 (NSupercomb y)
+      11: NAp    5    3 (NSupercomb y)
+      10: NInd #12
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 12
+  
+   5) Stk [  11: NAp    5    3 (NSupercomb y)
+      12: NAp   11    3 (NSupercomb y) ]
+   Heap [  12: NAp   11    3 (NSupercomb y)
+      11: NAp    5    3 (NSupercomb y)
+      10: NInd #12
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 12
+  
+   6) Stk [   5: NSupercomb K
+      11: NAp    5    3 (NSupercomb y)
+      12: NAp   11    3 (NSupercomb y) ]
+   Heap [  12: NAp   11    3 (NSupercomb y)
+      11: NAp    5    3 (NSupercomb y)
+      10: NInd #12
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 12
+  
+   7) Stk [   3: NSupercomb y ]
+   Heap [  12: NInd #3
+      11: NAp    5    3 (NSupercomb y)
+      10: NInd #12
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NSupercomb y
+       2: NInd #10
+       1: NSupercomb f ], Length: 12
+  
+   8) Stk [  13: NNum 2 ]
+   Heap [  13: NNum 2
+      12: NInd #3
+      11: NAp    5    3 (NInd #13)
+      10: NInd #12
+       9: NSupercomb twice
+       8: NSupercomb compose
+       7: NSupercomb S
+       6: NSupercomb K1
+       5: NSupercomb K
+       4: NSupercomb I
+       3: NInd #13
+       2: NInd #10
+       1: NSupercomb f ], Length: 13
+  
+
+
+Total number of steps = 7

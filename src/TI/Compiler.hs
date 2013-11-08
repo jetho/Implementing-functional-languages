@@ -38,9 +38,6 @@ allocatePrim heap (name, prim) = (heap', (name, addr))
     where
         (heap', addr) = hAlloc heap (NPrim name prim)
 	
-
-extraPreludeDefs = []	
-
 primitives :: ASSOC Name Primitive
 primitives = [ ("negate", Neg),
                ("+", Add),

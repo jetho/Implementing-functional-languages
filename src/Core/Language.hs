@@ -38,6 +38,7 @@ isAtomicExpr _ = False
 
 
 -- a small Prelude
+preludeDefs :: CoreProgram
 preludeDefs = 
     [ ("I", ["x"], EVar "x"),
       ("K", ["x", "y"], EVar "x"),
@@ -46,6 +47,9 @@ preludeDefs =
                                  (EAp (EVar "g") (EVar "x"))), 
       ("compose", ["f", "g", "x"], EAp (EVar "f")
                                         (EAp (EVar "g") (EVar "x"))),
-      ("twice", ["f"], EAp (EAp (EVar "compose") (EVar "f")) (EVar "f")) 
-    ] 
+      ("twice", ["f"], EAp (EAp (EVar "compose") (EVar "f")) (EVar "f")) ] 
 
+extraPreludeDefs :: CoreProgram
+extraPreludeDefs =
+    [ ("False", [], EConstr 0 0), 
+      ("True", [], EConstr 1 0) ]

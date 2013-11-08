@@ -129,7 +129,20 @@ primConstr t a (stack, dump, heap, globals, stats)
         heap' = hUpdate heap result_addr $ NData t components
         result_addr = head stack'
 
-primIf = undefined
+primIf (stack, dump, heap, globals, stats) 
+    | length stack < 4 = error "Incomplete If Expression!"
+    | isDataNode condition = (stack', dump, heap', globals, stats)
+    | otherwise = ([b], (tail stack):dump, heap, globals, stats) 
+    where
+        [b, t, f] = take 3 $ getArgs heap stack
+        condition = hLookup heap b
+        stack' = drop 3 stack
+        result_addr = head stack'
+        heap' = hUpdate heap result_addr branch
+        branch = case condition of 
+            NData 1 _ -> hLookup heap f
+            NData 2 _ -> hLookup heap t
+            _ -> error "invalid boolean expression"
 
 getArgs :: TiHeap -> TiStack -> [Addr]
 getArgs heap (sc:stack) = map get_arg stack
