@@ -51,5 +51,5 @@ preludeDefs =
 
 extraPreludeDefs :: CoreProgram
 extraPreludeDefs =
-    [ ("False", [], EConstr 0 0), 
-      ("True", [], EConstr 1 0) ]
+    [ ("False", [], EConstr 1 0), 
+      ("True", [], EConstr 2 0) ]
