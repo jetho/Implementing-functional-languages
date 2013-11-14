@@ -51,6 +51,9 @@ extraPreludeDefs :: CoreProgram
 extraPreludeDefs =
     [ ("False", [], EConstr 1 0), 
       ("True", [], EConstr 2 0), 
+      ("MkPair", [], EConstr 1 2), 
+      ("fst", ["p"], EAp (EAp (EVar "casePair") (EVar "p")) (EVar "K")),
+      ("snd", ["p"], EAp (EAp (EVar "casePair") (EVar "p")) (EVar "K1")),
       ("and", ["x","y"], EAp (EAp (EAp (EVar "if") (EVar "x")) (EVar "y")) (EVar "False")),
       ("or", ["x","y"], EAp (EAp (EAp (EVar "if") (EVar "x")) (EVar "x")) (EVar "y")),
       ("not", ["x"], EAp (EAp (EAp (EVar "if") (EVar "x")) (EVar "False")) (EVar "True")),

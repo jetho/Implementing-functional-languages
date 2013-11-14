@@ -35,6 +35,7 @@ data Primitive = Neg
                | LessEq 
                | Eq 
                | NotEq
+               | CasePair
                deriving (Show)
 
 

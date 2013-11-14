@@ -78,6 +78,7 @@ primStep Eq = primCompare (==)
 primStep NotEq = primCompare (/=)
 primStep (PrimConstr t a) = primConstr t a
 primStep If = primIf 
+primStep CasePair = primCasePair
 primStep unknown = error $ "Unknown Primitive: " ++ show unknown
 
 primDyadic :: TiState -> (Node -> Node -> Node) -> TiState
@@ -130,7 +131,7 @@ primConstr t a (stack, dump, heap, globals, stats)
         result_addr = head stack'
 
 primIf (stack, dump, heap, globals, stats) 
-    | length stack < 4 = error "Incomplete If Expression!"
+    | length stack <= 3 = error "Incomplete If Expression!"
     | isDataNode condition = (stack', dump, heap', globals, stats)
     | otherwise = ([b], (tail stack):dump, heap, globals, stats) 
     where
@@ -143,6 +144,29 @@ primIf (stack, dump, heap, globals, stats)
             NData 1 _ -> hLookup heap f
             NData 2 _ -> hLookup heap t
             _ -> error "invalid boolean expression"
+
+primCasePair (stack, dump, heap, globals, stats) 
+    | length stack <= 2 = error $ "Malformed casePair Expression!"
+    | isPair pair = (stack', dump, heap'', globals, stats)
+    | isDataNode pair = error $ "Invalid argument to casePair"
+    | otherwise = ([p], (tail stack):dump, heap, globals, stats) 
+    where
+        [p, f] = take 2 $ getArgs heap stack
+        pair = hLookup heap p
+        stack' = drop 2 stack
+        result_addr = head stack'
+        (heap', fNode) = applyPair heap pair f
+        heap'' = hUpdate heap' result_addr fNode
+
+isPair (NData 1 [_, _]) = True
+isPair _ = False
+
+applyPair heap (NData 1 [fst, snd]) f = (heap'', apNode)
+    where
+        (heap', addr) = hAlloc heap (NAp f fst)
+        (heap'', addr') = hAlloc heap' (NAp addr snd)
+        apNode = hLookup heap'' addr'        
+
 
 getArgs :: TiHeap -> TiStack -> [Addr]
 getArgs heap (sc:stack) = map get_arg stack
