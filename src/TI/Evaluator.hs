@@ -27,6 +27,7 @@ isDataNode node = False
 doAdmin :: TiState -> TiState
 doAdmin state = applyToStats tiStatIncSteps state
 
+step :: TiState -> TiState
 step state = dispatch (hLookup heap (head stack))
     where
         (stack, dump, heap, globals, stats) = state
@@ -132,6 +133,7 @@ primConstr t a (stack, dump, heap, globals, stats)
         heap' = hUpdate heap result_addr $ NData t components
         result_addr = head stack'
 
+primIf :: TiState -> TiState
 primIf (stack, dump, heap, globals, stats) 
     | length stack <= 3 = error "Incomplete If Expression!"
     | isDataNode condition = (stack', dump, heap', globals, stats)
@@ -147,6 +149,7 @@ primIf (stack, dump, heap, globals, stats)
             NData 2 _ -> hLookup heap t
             _ -> error "invalid boolean expression"
 
+primCasePair :: TiState -> TiState
 primCasePair (stack, dump, heap, globals, stats) 
     | length stack <= 2 = error $ "Malformed casePair Expression!"
     | isPair pair = (stack', dump, heap'', globals, stats)
@@ -160,15 +163,18 @@ primCasePair (stack, dump, heap, globals, stats)
         (heap', fNode) = applyPair heap pair f
         heap'' = hUpdate heap' result_addr fNode
 
+isPair :: Node -> Bool
 isPair (NData 1 [_, _]) = True
 isPair _ = False
 
+applyPair :: TiHeap -> Node -> Addr -> (TiHeap, Node)
 applyPair heap (NData 1 [fst, snd]) f = (heap'', apNode)
     where
         (heap', addr) = hAlloc heap (NAp f fst)
         (heap'', addr') = hAlloc heap' (NAp addr snd)
         apNode = hLookup heap'' addr'        
 
+primCaseList :: TiState -> TiState
 primCaseList (stack, dump, heap, globals, stats) 
     | length stack <= 3 = error $ "Malformed caseList Expression!"
     | isList list = (stack', dump, heap'', globals, stats)
@@ -182,10 +188,12 @@ primCaseList (stack, dump, heap, globals, stats)
         (heap', fNode) = applyList heap list nilFunc consFunc
         heap'' = hUpdate heap' result_addr fNode
 
+isList :: Node -> Bool
 isList (NData 1 []) = True
 isList (NData 2 [_, _]) = True
 isList _ = False
 
+applyList :: TiHeap -> Node -> Addr -> Addr -> (TiHeap, Node)
 applyList heap (NData 1 []) f _ = (heap, hLookup heap f)
 applyList heap (NData 2 [x, xs]) _ f = (heap'', apNode) 
     where
@@ -194,6 +202,7 @@ applyList heap (NData 2 [x, xs]) _ f = (heap'', apNode)
         apNode = hLookup heap'' addr'
 applyList _ _ _ _ = error "List expected"
 
+primAbort :: TiState -> TiState
 primAbort = error "Computation aborted."
 
 getArgs :: TiHeap -> TiStack -> [Addr]
