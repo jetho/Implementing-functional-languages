@@ -51,4 +51,6 @@ primitives = [ ("negate", Neg),
                (">=", GreaterEq),
                ("==", Eq),
                ("!=", NotEq),
-               ("casePair", CasePair) ]
+               ("casePair", CasePair),
+               ("caseList", CaseList),
+               ("abort", Abort) ]

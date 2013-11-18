@@ -79,6 +79,8 @@ primStep NotEq = primCompare (/=)
 primStep (PrimConstr t a) = primConstr t a
 primStep If = primIf 
 primStep CasePair = primCasePair
+primStep CaseList = primCaseList
+primStep Abort = primAbort
 primStep unknown = error $ "Unknown Primitive: " ++ show unknown
 
 primDyadic :: TiState -> (Node -> Node -> Node) -> TiState
@@ -167,6 +169,32 @@ applyPair heap (NData 1 [fst, snd]) f = (heap'', apNode)
         (heap'', addr') = hAlloc heap' (NAp addr snd)
         apNode = hLookup heap'' addr'        
 
+primCaseList (stack, dump, heap, globals, stats) 
+    | length stack <= 3 = error $ "Malformed caseList Expression!"
+    | isList list = (stack', dump, heap'', globals, stats)
+    | isDataNode list = error $ "Invalid argument to caseList"
+    | otherwise = ([l], (tail stack):dump, heap, globals, stats) 
+    where
+        [l, nilFunc, consFunc] = take 3 $ getArgs heap stack
+        list = hLookup heap l
+        stack' = drop 3 stack
+        result_addr = head stack'
+        (heap', fNode) = applyList heap list nilFunc consFunc
+        heap'' = hUpdate heap' result_addr fNode
+
+isList (NData 1 []) = True
+isList (NData 2 [_, _]) = True
+isList _ = False
+
+applyList heap (NData 1 []) f _ = (heap, hLookup heap f)
+applyList heap (NData 2 [x, xs]) _ f = (heap'', apNode) 
+    where
+        (heap', addr) = hAlloc heap (NAp f x)
+        (heap'', addr') = hAlloc heap' (NAp addr xs)
+        apNode = hLookup heap'' addr'
+applyList _ _ _ _ = error "List expected"
+
+primAbort = error "Computation aborted."
 
 getArgs :: TiHeap -> TiStack -> [Addr]
 getArgs heap (sc:stack) = map get_arg stack

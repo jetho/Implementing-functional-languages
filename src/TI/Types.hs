@@ -36,6 +36,8 @@ data Primitive = Neg
                | Eq 
                | NotEq
                | CasePair
+               | CaseList
+               | Abort
                deriving (Show)
 
 
