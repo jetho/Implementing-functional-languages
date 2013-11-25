@@ -20,6 +20,7 @@ data Node = NAp Addr Addr
           | NInd Addr
           | NPrim Name Primitive
           | NData Int [Addr]
+          | NMarked Node
 
 		  
 data Primitive = Neg 

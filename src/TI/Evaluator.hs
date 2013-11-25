@@ -5,6 +5,7 @@ import Core.Language
 import Utils.Assoc
 import Utils.Heap
 import TI.Types
+import TI.GarbageCollector
 
 
 eval :: TiState -> [TiState]
@@ -25,7 +26,7 @@ isDataNode (NData _ _) = True
 isDataNode node = False
 
 doAdmin :: TiState -> TiState
-doAdmin state = applyToStats tiStatIncSteps state
+doAdmin = applyToStats tiStatIncSteps . gc
 
 step :: TiState -> TiState
 step state = dispatch (hLookup heap (head stack))
