@@ -29,16 +29,16 @@ markFrom :: TiHeap -> Addr -> TiHeap
 markFrom heap addr = 
     case node of
         NMarked _ -> heap
-        otherwise -> markNode heap' node
+        otherwise -> mark heap' node
     where
         node = hLookup heap addr
         heap' = hUpdate heap addr $ NMarked node
 
-markNode :: TiHeap -> Node -> TiHeap
-markNode heap (NInd a) = markFrom heap a
-markNode heap (NAp a1 a2) = markFrom (markFrom heap a1) a2
-markNode heap (NData _ as) = foldl' markFrom heap as 
-markNode heap _ = heap
+mark :: TiHeap -> Node -> TiHeap
+mark heap (NInd a) = markFrom heap a
+mark heap (NAp a1 a2) = markFrom (markFrom heap a1) a2
+mark heap (NData _ as) = foldl' markFrom heap as 
+mark heap _ = heap
 
 
 findStackRoots :: TiStack -> [Addr]
