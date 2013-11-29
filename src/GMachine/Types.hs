@@ -28,14 +28,13 @@ data Instruction = Unwind
                  | PushGlobal Name
                  | PushInt Int
                  | Push Int
-                 | MkApp
-                 | Update Int
+                 | MkAp
                  | Slide Int
                  deriving (Eq, Show)
 
 
 data Node = NNum Int
-          | NApp Addr Addr
+          | NAp Addr Addr
           | NGlobal Int GmCode
           | NIndir Addr
           deriving Show
