@@ -62,4 +62,13 @@ slide n state = state { gmStack = a: drop n as }
     where
         a:as = gmStack state
 
-unwind = undefined
+unwind :: GmState -> GmState
+unwind state = newState $ hLookup (gmHeap state) a
+    where
+        a:as = gmStack state
+        newState (NNum _) = state
+        newState (NAp a1 _) = state { gmCode = [Unwind], gmStack = a1:a:as }
+        newState (NGlobal n c) 
+            | length as < n = error "Unwinding with too few arguments"
+            | otherwise = state { gmCode = c }
+
