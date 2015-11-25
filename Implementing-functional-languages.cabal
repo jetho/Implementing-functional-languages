@@ -16,7 +16,19 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Core.PrettyPrinter, Core.Parser, Core.Language, Utils.Heap, Utils.Assoc, TI.Types, TI.GarbageCollector, TI.Compiler, TI.Evaluator, TI.Main, GMachine.Types, GMachine.Evaluator
+  exposed-modules:     Core.PrettyPrinter
+                       Core.Parser
+                       Core.Language
+                       Utils.Heap
+                       Utils.Assoc
+                       TI.Types
+                       TI.GarbageCollector
+                       TI.Compiler
+                       TI.Evaluator
+                       TI.Main
+                       GMachine.Types
+                       GMachine.Evaluator
+                       GMachine.Compiler
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9

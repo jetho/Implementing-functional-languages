@@ -17,12 +17,15 @@ compile :: CoreProgram -> GmState
 compile program = (initialCode, [], heap, globals, statInitial)
   where (heap, globals) = buildInitialHeap program
 
-buildInitialHeap :: [CoreScDefn] -> (TiHeap, TiGlobals)
+statInitial :: GmStats
+statInitial = 0
+
+buildInitialHeap :: [CoreScDefn] -> (GmHeap, GmGlobals)
 buildInitialHeap program = mapAccumL allocateSc hInitial compiled
   where compiled = map compileSc program
 
 allocateSc :: GmHeap -> GmCompiledSC -> (GmHeap, (Name, Addr))
-allocateSc heap (name, nargs, instns) = (heap', (name, addr)
+allocateSc heap (name, nargs, instns) = (heap', (name, addr))
   where (heap', addr) = hAlloc heap (NGlobal nargs instns)
 
 initialCode :: GmCode
@@ -37,9 +40,9 @@ compileR e env = compileC e env ++ [Slide (length env + 1), Unwind]
 compileC :: GmCompiler
 compileC (EVar v) env
   | elem v (aDomain env)  = [Push n]
-  | otherwise             = [Pushglobal v]
+  | otherwise             = [PushGlobal v]
   where n = aLookup env v (error "Can’t happen")
-compileC (ENum n) env     = [Pushint n]
+compileC (ENum n) env     = [PushInt n]
 compileC (EAp e1 e2) env  = compileC e2 env ++
                             compileC e1 (argOffset 1 env) ++
                             [MkAp]
