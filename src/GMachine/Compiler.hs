@@ -14,11 +14,19 @@ type GmEnvironment = ASSOC Name Int
 
 
 compile :: CoreProgram -> GmState
-compile program = (initialCode, [], heap, globals, statInitial)
-  where (heap, globals) = buildInitialHeap program
+compile program =
+    GmState { gmCode = initialCode,
+              gmStack = [],
+              gmDump = [],
+              gmHeap = heap,
+              gmGlobals = globals,
+              gmStats = initialStats
+            }
+  where
+    (heap, globals) = buildInitialHeap program
 
-statInitial :: GmStats
-statInitial = 0
+initialStats :: GmStats
+initialStats = 0
 
 buildInitialHeap :: [CoreScDefn] -> (GmHeap, GmGlobals)
 buildInitialHeap program = mapAccumL allocateSc hInitial compiled
