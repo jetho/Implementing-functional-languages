@@ -29,6 +29,7 @@ library
                        GMachine.Types
                        GMachine.Evaluator
                        GMachine.Compiler
+                       GMachine.Main
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9
