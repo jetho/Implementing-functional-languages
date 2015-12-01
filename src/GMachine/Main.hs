@@ -11,11 +11,11 @@ import GMachine.Evaluator
 import Utils.Heap
 
 
-runProg :: [Char] -> [Char]
+runProg :: String -> String
 runProg = showResults . eval . compile . parse
 
 
-showResults :: [GmState] -> [Char]
+showResults :: [GmState] -> String
 showResults states
       = iDisplay (iConcat [
       iStr "Supercombinator definitions", iNewline,
