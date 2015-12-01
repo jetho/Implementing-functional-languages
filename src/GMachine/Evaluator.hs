@@ -9,7 +9,7 @@ import GMachine.Types
 
 eval :: GmState -> [GmState]
 eval state = state : restStates
-    where 
+    where
         restStates | gmFinal state = []
                    | otherwise = eval nextState
         nextState = doAdmin (step state)
@@ -18,7 +18,7 @@ gmFinal :: GmState -> Bool
 gmFinal = null . gmCode
 
 doAdmin :: GmState -> GmState
-doAdmin state = state { gmStats = statIncSteps $ gmStats state } 
+doAdmin state = state { gmStats = statIncSteps $ gmStats state }
 
 step :: GmState -> GmState
 step state = dispatch i $ state { gmCode = is}
@@ -34,13 +34,13 @@ dispatch (Slide n) = slide n
 dispatch Unwind = unwind
 
 pushGlobal :: Name -> GmState -> GmState
-pushGlobal f state = state { gmStack = addr: gmStack state }
+pushGlobal f state = state { gmStack = addr : gmStack state }
     where
-        addr = aLookup (gmGlobals state) f err 
+        addr = aLookup (gmGlobals state) f err
         err = error $ "Undeclared global: " ++ f
 
 pushInt :: Int -> GmState -> GmState
-pushInt n state = state { gmStack = addr: gmStack state, gmHeap = heap' }
+pushInt n state = state { gmStack = addr : gmStack state, gmHeap = heap' }
     where
         (heap', addr) = hAlloc (gmHeap state) $ NNum n
 
@@ -58,7 +58,7 @@ push n state = state { gmStack = addr:stack }
         getArg (NAp _ a2) = a2
 
 slide :: Int -> GmState -> GmState
-slide n state = state { gmStack = a: drop n as }
+slide n state = state { gmStack = a : drop n as }
     where
         a:as = gmStack state
 
@@ -68,7 +68,7 @@ unwind state = newState $ hLookup (gmHeap state) a
         a:as = gmStack state
         newState (NNum _) = state
         newState (NAp a1 _) = state { gmCode = [Unwind], gmStack = a1:a:as }
-        newState (NGlobal n c) 
+        newState (NGlobal n c)
             | length as < n = error "Unwinding with too few arguments"
             | otherwise = state { gmCode = c }
 
