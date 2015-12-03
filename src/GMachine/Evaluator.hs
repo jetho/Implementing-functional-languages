@@ -27,18 +27,18 @@ step state = dispatch i $ state { gmCode = is}
 
 dispatch :: Instruction -> GmState -> GmState
 dispatch (PushGlobal f) = pushGlobal f
-dispatch (PushInt n) = pushInt n
-dispatch MkAp = mkAp
-dispatch (Push n) = push n
-dispatch (Update n) = update n
-dispatch (Pop n) = pop n
-dispatch Unwind = unwind
+dispatch (PushInt n)    = pushInt n
+dispatch MkAp           = mkAp
+dispatch (Push n)       = push n
+dispatch (Update n)     = update n
+dispatch (Pop n)        = pop n
+dispatch Unwind         = unwind
 
 pushGlobal :: Name -> GmState -> GmState
 pushGlobal f state = state { gmStack = addr : gmStack state }
     where
         addr = aLookup (gmGlobals state) f err
-        err = error $ "Undeclared global: " ++ f
+        err  = error $ "Undeclared global: " ++ f
 
 pushInt :: Int -> GmState -> GmState
 pushInt n state =
