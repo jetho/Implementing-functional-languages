@@ -43,7 +43,8 @@ showInstruction (PushGlobal f) = (iStr "PushGlobal ") `iAppend` (iStr f)
 showInstruction (Push n)       = (iStr "Push ")       `iAppend` (iNum n)
 showInstruction (PushInt n)    = (iStr "PushInt ")    `iAppend` (iNum n)
 showInstruction MkAp           = iStr  "MkAp"
-showInstruction (Slide n)      = (iStr  "Slide ")     `iAppend` (iNum n)
+showInstruction (Update n)     = (iStr "Update ")     `iAppend` (iNum n)
+showInstruction (Pop n)        = (iStr "Pop ")        `iAppend` (iNum n)
 
 showState :: GmState -> Iseq
 showState s
@@ -68,6 +69,7 @@ showNode s a (NGlobal n g) = iConcat [iStr "Global ", iStr v]
                                    globals = gmGlobals s
 showNode s a (NAp a1 a2)   = iConcat [iStr "Ap ",  iStr (showAddr a1),
                                       iStr " ",    iStr (showAddr a2)]
+showNode s a (NInd a1)     = iConcat [iStr "Ind ", iStr (showAddr a1)]
 
 showStats :: GmState -> Iseq
 showStats s

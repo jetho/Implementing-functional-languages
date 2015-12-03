@@ -29,14 +29,15 @@ data Instruction = Unwind
                  | PushInt Int
                  | Push Int
                  | MkAp
-                 | Slide Int
+                 | Update Int
+                 | Pop Int
                  deriving (Eq, Show)
 
 
 data Node = NNum Int
           | NAp Addr Addr
           | NGlobal Int GmCode
-          | NIndir Addr
+          | NInd Addr
           deriving Show
 
 

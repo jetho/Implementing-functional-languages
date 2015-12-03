@@ -30,7 +30,8 @@ dispatch (PushGlobal f) = pushGlobal f
 dispatch (PushInt n) = pushInt n
 dispatch MkAp = mkAp
 dispatch (Push n) = push n
-dispatch (Slide n) = slide n
+dispatch (Update n) = update n
+dispatch (Pop n) = pop n
 dispatch Unwind = unwind
 
 pushGlobal :: Name -> GmState -> GmState
@@ -40,9 +41,23 @@ pushGlobal f state = state { gmStack = addr : gmStack state }
         err = error $ "Undeclared global: " ++ f
 
 pushInt :: Int -> GmState -> GmState
-pushInt n state = state { gmStack = addr : gmStack state, gmHeap = heap' }
+pushInt n state =
+    case aLookup globals ident (-1) of
+        -1 ->
+            state { gmStack = stack', gmHeap = heap', gmGlobals = globals' }
+            where
+                (heap', addr) = hAlloc heap $ NNum n
+                stack'        = addr : stack
+                globals'      = (ident, addr) : globals
+        addr ->
+            state { gmStack = stack' }
+            where
+                stack' = addr : stack
     where
-        (heap', addr) = hAlloc (gmHeap state) $ NNum n
+        heap    = gmHeap state
+        stack   = gmStack state
+        globals = gmGlobals state
+        ident   = show n
 
 mkAp :: GmState -> GmState
 mkAp state = state { gmStack = addr:as, gmHeap = heap' }
@@ -57,18 +72,24 @@ push n state = state { gmStack = addr:stack }
         addr = getArg $ hLookup (gmHeap state) (stack !! (n+1))
         getArg (NAp _ a2) = a2
 
-slide :: Int -> GmState -> GmState
-slide n state = state { gmStack = a : drop n as }
+update :: Int -> GmState -> GmState
+update n state = state { gmStack = as, gmHeap = heap' }
     where
-        a:as = gmStack state
+        a:as  = gmStack state
+        heap' = hUpdate (gmHeap state) root $ NInd a
+        root  = as !! n
+
+pop :: Int -> GmState -> GmState
+pop n state = state { gmStack = drop n $ gmStack state }
 
 unwind :: GmState -> GmState
 unwind state = newState $ hLookup (gmHeap state) a
     where
-        a:as = gmStack state
-        newState (NNum _) = state
-        newState (NAp a1 _) = state { gmCode = [Unwind], gmStack = a1:a:as }
+        a:as                 = gmStack state
+        newState (NInd addr) = state { gmCode = [Unwind], gmStack = addr:as }
+        newState (NNum _)    = state
+        newState (NAp a1 _)  = state { gmCode = [Unwind], gmStack = a1:a:as }
         newState (NGlobal n c)
-            | length as < n = error "Unwinding with too few arguments"
-            | otherwise = state { gmCode = c }
+            | length as < n  = error "Unwinding with too few arguments"
+            | otherwise      = state { gmCode = c }
 

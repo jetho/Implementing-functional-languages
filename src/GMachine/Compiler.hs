@@ -43,7 +43,8 @@ compileSc :: (Name, [Name], CoreExpr) -> GmCompiledSC
 compileSc (name, env, body) = (name, length env, compileR body (zip env [0..]))
 
 compileR :: GmCompiler
-compileR e env = compileC e env ++ [Slide (length env + 1), Unwind]
+compileR e env = compileC e env ++ [Update n, Pop n, Unwind]
+  where n = length env
 
 compileC :: GmCompiler
 compileC (EVar v) env
