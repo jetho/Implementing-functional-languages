@@ -31,6 +31,7 @@ data Instruction = Unwind
                  | MkAp
                  | Update Int
                  | Pop Int
+                 | Slide Int
                  deriving (Eq, Show)
 
 

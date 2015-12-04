@@ -55,6 +55,27 @@ compileC (ENum n) env     = [PushInt n]
 compileC (EAp e1 e2) env  = compileC e2 env ++
                             compileC e1 (argOffset 1 env) ++
                             [MkAp]
+compileC (ELet recursive defs e) args
+  | recursive             = compileLetrec compileC defs e args
+  | otherwise             = compileLet    compileC defs e args
+
+
+compileLet :: GmCompiler -> [(Name, CoreExpr)] -> GmCompiler
+compileLet comp defs expr env
+  = compileLet' defs env ++ comp expr env' ++ [Slide (length defs)]
+  where env' = compileArgs defs env
+
+compileLet' :: [(Name, CoreExpr)] -> GmEnvironment -> GmCode
+compileLet' []                  env = []
+compileLet' ((name, expr):defs) env
+  = compileC expr env ++ compileLet' defs (argOffset 1 env)
+
+compileLetrec = undefined
+
+compileArgs :: [(Name, CoreExpr)] -> GmEnvironment -> GmEnvironment
+compileArgs defs env
+  = zip (map fst defs) [n-1, n-2 .. 0] ++ argOffset n env
+  where n = length defs
 
 argOffset :: Int -> GmEnvironment -> GmEnvironment
 argOffset n env = [(v, n+m) | (v,m) <- env]
