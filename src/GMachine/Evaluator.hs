@@ -66,11 +66,11 @@ mkAp state = state { gmStack = addr:as, gmHeap = heap' }
         (heap', addr) = hAlloc (gmHeap state) $ NAp a1 a2
 
 push :: Int -> GmState -> GmState
-push n state = state { gmStack = addr:stack }
+push n state = state { gmStack = stack' }
     where
-        stack = gmStack state
-        addr = getArg $ hLookup (gmHeap state) (stack !! (n+1))
-        getArg (NAp _ a2) = a2
+        stack' = addr : stack
+        addr   = stack !! n
+        stack  = gmStack state
 
 update :: Int -> GmState -> GmState
 update n state = state { gmStack = as, gmHeap = heap' }
@@ -83,7 +83,7 @@ pop :: Int -> GmState -> GmState
 pop n state = state { gmStack = drop n $ gmStack state }
 
 unwind :: GmState -> GmState
-unwind state = newState $ hLookup (gmHeap state) a
+unwind state = newState $ hLookup heap a
     where
         a:as                 = gmStack state
         newState (NInd addr) = state { gmCode = [Unwind], gmStack = addr:as }
@@ -91,5 +91,19 @@ unwind state = newState $ hLookup (gmHeap state) a
         newState (NAp a1 _)  = state { gmCode = [Unwind], gmStack = a1:a:as }
         newState (NGlobal n c)
             | length as < n  = error "Unwinding with too few arguments"
-            | otherwise      = state { gmCode = c }
+            | otherwise      = state { gmCode = c
+                                     , gmStack = (rearrange n heap stack)
+                                     }
+        stack = gmStack state
+        heap  = gmHeap state
+
+
+rearrange :: Int -> GmHeap -> GmStack -> GmStack
+rearrange n heap stack = addrs ++ drop n stack
+    where
+        addrs = map (getArg . hLookup heap) (take n $ tail stack)
+
+getArg :: Node -> Addr
+getArg (NAp a1 a2) = a2
+
 
