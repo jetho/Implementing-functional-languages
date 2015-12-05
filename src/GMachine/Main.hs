@@ -45,6 +45,7 @@ showInstruction (PushInt n)    = (iStr "PushInt ")    `iAppend` (iNum n)
 showInstruction MkAp           = iStr  "MkAp"
 showInstruction (Update n)     = (iStr "Update ")     `iAppend` (iNum n)
 showInstruction (Pop n)        = (iStr "Pop ")        `iAppend` (iNum n)
+showInstruction (Slide n)      = (iStr  "Slide ")     `iAppend` (iNum n)
 
 showState :: GmState -> Iseq
 showState s

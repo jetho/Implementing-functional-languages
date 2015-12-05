@@ -32,6 +32,7 @@ dispatch MkAp           = mkAp
 dispatch (Push n)       = push n
 dispatch (Update n)     = update n
 dispatch (Pop n)        = pop n
+dispatch (Slide n)      = slide n
 dispatch Unwind         = unwind
 
 pushGlobal :: Name -> GmState -> GmState
@@ -81,6 +82,10 @@ update n state = state { gmStack = as, gmHeap = heap' }
 
 pop :: Int -> GmState -> GmState
 pop n state = state { gmStack = drop n $ gmStack state }
+
+slide :: Int -> GmState -> GmState
+slide n state = state { gmStack = a : drop n as }
+    where a:as = gmStack state
 
 unwind :: GmState -> GmState
 unwind state = newState $ hLookup heap a
