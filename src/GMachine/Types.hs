@@ -29,6 +29,7 @@ data Instruction = Unwind
                  | PushInt Int
                  | Push Int
                  | MkAp
+                 | Alloc Int
                  | Update Int
                  | Pop Int
                  | Slide Int

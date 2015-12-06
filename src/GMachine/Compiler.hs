@@ -70,13 +70,25 @@ compileLet' []                  env = []
 compileLet' ((name, expr):defs) env
   = compileC expr env ++ compileLet' defs (argOffset 1 env)
 
-compileLetrec = undefined
+compileLetrec :: GmCompiler -> [(Name, CoreExpr)] -> GmCompiler
+compileLetrec comp defs expr args
+  = [Alloc n] ++ defs' ++ comp expr args' ++ [Slide n]
+    where n     = length defs
+          args' = compileArgs defs args
+          defs' = concatMap (\(i, def) -> compileC def args' ++ [Update i])
+                  (zip [n-1 .. 0] (map snd defs))
 
 compileArgs :: [(Name, CoreExpr)] -> GmEnvironment -> GmEnvironment
 compileArgs defs env
-  = zip (map fst defs) [n-1, n-2 .. 0] ++ argOffset n env
+  = zip (map fst defs) [n-1 .. 0] ++ argOffset n env
   where n = length defs
 
 argOffset :: Int -> GmEnvironment -> GmEnvironment
 argOffset n env = [(v, n+m) | (v,m) <- env]
+
+allocNodes :: Int -> GmHeap -> (GmHeap, [Addr])
+allocNodes 0 heap = (heap, [])
+allocNodes n heap = (heap2, a:as)
+                    where (heap1, as) = allocNodes (n-1) heap
+                          (heap2, a)  = hAlloc heap1 (NInd hNull)
 
