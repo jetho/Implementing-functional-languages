@@ -46,6 +46,12 @@ showInstruction MkAp           = iStr  "MkAp"
 showInstruction (Update n)     = (iStr "Update ")     `iAppend` (iNum n)
 showInstruction (Pop n)        = (iStr "Pop ")        `iAppend` (iNum n)
 showInstruction (Slide n)      = (iStr  "Slide ")     `iAppend` (iNum n)
+showInstruction Eval           = iStr  "Eval"
+showInstruction Add            = iStr  "Add"
+showInstruction Sub            = iStr  "Sub"
+showInstruction Mul            = iStr  "Mul"
+showInstruction Div            = iStr  "Div"
+showInstruction Neg            = iStr  "Neg"
 
 showState :: GmState -> Iseq
 showState s

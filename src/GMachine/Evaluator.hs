@@ -34,6 +34,12 @@ dispatch (Update n)     = update n
 dispatch (Pop n)        = pop n
 dispatch (Slide n)      = slide n
 dispatch Unwind         = unwind
+dispatch Eval           = evalOp
+dispatch Add            = arithmetic2 (+)
+dispatch Sub            = arithmetic2 (-)
+dispatch Mul            = arithmetic2 (*)
+dispatch Div            = arithmetic2 (div)
+dispatch Neg            = arithmetic1 negate
 
 pushGlobal :: Name -> GmState -> GmState
 pushGlobal f state = state { gmStack = addr : gmStack state }
@@ -87,12 +93,18 @@ slide :: Int -> GmState -> GmState
 slide n state = state { gmStack = a : drop n as }
     where a:as = gmStack state
 
+evalOp :: GmState -> GmState
+evalOp state = state { gmCode = [Unwind], gmStack = [a], gmDump = d' }
+   where a:as  = gmStack state
+         d'    = (gmCode state, as) : gmDump state
+
 unwind :: GmState -> GmState
 unwind state = newState $ hLookup heap a
     where
         a:as                 = gmStack state
+        (i',s'):d            = gmDump state
         newState (NInd addr) = state { gmCode = [Unwind], gmStack = addr:as }
-        newState (NNum _)    = state
+        newState (NNum _)    = state { gmCode = i', gmStack = a:s', gmDump = d }
         newState (NAp a1 _)  = state { gmCode = [Unwind], gmStack = a1:a:as }
         newState (NGlobal n c)
             | length as < n  = error "Unwinding with too few arguments"
@@ -102,7 +114,6 @@ unwind state = newState $ hLookup heap a
         stack = gmStack state
         heap  = gmHeap state
 
-
 rearrange :: Int -> GmHeap -> GmStack -> GmStack
 rearrange n heap stack = addrs ++ drop n stack
     where
@@ -111,4 +122,33 @@ rearrange n heap stack = addrs ++ drop n stack
 getArg :: Node -> Addr
 getArg (NAp a1 a2) = a2
 
+boxInteger :: Int -> GmState -> GmState
+boxInteger n state = state { gmStack = a: gmStack state, gmHeap = h' }
+    where (h', a) = hAlloc (gmHeap state) (NNum n)
+
+unboxInteger :: Addr -> GmState -> Int
+unboxInteger a state = ub (hLookup (gmHeap state) a)
+    where   ub (NNum i) = i
+            ub n        = error "Unboxing a non-integer"
+
+primitive1 :: (b -> GmState -> GmState)
+         -> (Addr -> GmState -> a)
+         -> (a -> b)
+         -> (GmState -> GmState)
+primitive1 box unbox op state = box (op (unbox a state)) state { gmStack = as }
+    where a:as = gmStack state
+
+primitive2 :: (b -> GmState -> GmState)
+         -> (Addr -> GmState -> a)
+         -> (a -> a -> b)
+         -> (GmState -> GmState)
+primitive2 box unbox op state
+    = box (op (unbox a0 state) (unbox a1 state)) state { gmStack = as }
+    where (a0:a1:as) = gmStack state
+
+arithmetic1 ::   (Int -> Int) -> (GmState -> GmState)
+arithmetic1 = primitive1 boxInteger unboxInteger
+
+arithmetic2 ::   (Int -> Int -> Int) -> (GmState -> GmState)
+arithmetic2 = primitive2 boxInteger unboxInteger
 

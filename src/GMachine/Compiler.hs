@@ -30,14 +30,14 @@ initialStats = 0
 
 buildInitialHeap :: [CoreScDefn] -> (GmHeap, GmGlobals)
 buildInitialHeap program = mapAccumL allocateSc hInitial compiled
-  where compiled = map compileSc program
+  where compiled = map compileSc (preludeDefs ++ program) ++ compiledPrimitives
 
 allocateSc :: GmHeap -> GmCompiledSC -> (GmHeap, (Name, Addr))
 allocateSc heap (name, nargs, instns) = (heap', (name, addr))
   where (heap', addr) = hAlloc heap (NGlobal nargs instns)
 
 initialCode :: GmCode
-initialCode = [PushGlobal "main", Unwind]
+initialCode = [PushGlobal "main", Eval]
 
 compileSc :: (Name, [Name], CoreExpr) -> GmCompiledSC
 compileSc (name, env, body) = (name, length env, compileR body (zip env [0..]))
@@ -91,4 +91,11 @@ allocNodes 0 heap = (heap, [])
 allocNodes n heap = (heap2, a:as)
                     where (heap1, as) = allocNodes (n-1) heap
                           (heap2, a)  = hAlloc heap1 (NInd hNull)
-
+compiledPrimitives :: [GmCompiledSC]
+compiledPrimitives
+  = [("+", 2, [Push 1, Eval, Push 1, Eval, Add, Update 2, Pop 2, Unwind]),
+     ("-", 2, [Push 1, Eval, Push 1, Eval, Sub, Update 2, Pop 2, Unwind]),
+     ("*", 2, [Push 1, Eval, Push 1, Eval, Mul, Update 2, Pop 2, Unwind]),
+     ("/", 2, [Push 1, Eval, Push 1, Eval, Div, Update 2, Pop 2, Unwind]),
+     ("negate", 1, [Push 0, Eval, Neg, Update 1, Pop 1, Unwind])
+    ]
