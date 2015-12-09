@@ -33,6 +33,10 @@ data Instruction = Unwind
                  | Update Int
                  | Pop Int
                  | Slide Int
+                 | Eval
+                 | Add | Sub | Mul | Div | Neg
+                 | Eq | Ne | Lt | Le | Gt | Ge
+                 | Cond GmCode GmCode
                  deriving (Eq, Show)
 
 

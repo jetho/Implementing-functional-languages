@@ -49,8 +49,9 @@ showInstruction (Slide n)      = (iStr  "Slide ")     `iAppend` (iNum n)
 
 showState :: GmState -> Iseq
 showState s
-   = iConcat [showStack s,         iNewline,
-   showInstructions (gmCode s),   iNewline]
+   = iConcat [showStack s,                   iNewline,
+              showDump s,                    iNewline,
+              showInstructions (gmCode s),   iNewline]
 
 showStack :: GmState -> Iseq
 showStack s
@@ -75,4 +76,31 @@ showNode s a (NInd a1)     = iConcat [iStr "Ind ", iStr (showAddr a1)]
 showStats :: GmState -> Iseq
 showStats s
       = iConcat [ iStr "Steps taken = ", iNum (statGetSteps (gmStats s))]
+
+showDump :: GmState -> Iseq
+showDump s
+  = iConcat [iStr " Dump:[",
+             iIndent (iInterleave iNewline
+                     (map showDumpItem (reverse (gmDump s)))),
+             iStr "]"]
+
+showDumpItem :: GmDumpItem -> Iseq
+showDumpItem (code, stack)
+  = iConcat [iStr "<",
+             shortShowInstructions 3 code, iStr ", ",
+             shortShowStack stack,
+             iStr ">"]
+
+shortShowInstructions :: Int -> GmCode -> Iseq
+shortShowInstructions number code
+  = iConcat [iStr "{", iInterleave (iStr "; ") dotcodes, iStr "}"]
+  where   codes   = map showInstruction (take number code)
+          dotcodes      | length code > number  = codes ++ [iStr "..."]
+                        | otherwise             = codes
+
+shortShowStack :: GmStack -> Iseq
+shortShowStack stack
+  = iConcat [iStr "[",
+             iInterleave (iStr ", ") (map (iStr . showAddr) stack),
+             iStr "]"]
 
