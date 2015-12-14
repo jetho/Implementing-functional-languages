@@ -172,6 +172,6 @@ cond :: GmCode -> GmCode -> GmState -> GmState
 cond i1 i2 state = state { gmCode = (i'++i), gmStack = s }
      where (a:s) = gmStack state
            i' | hLookup (gmHeap state) a == NNum 1 = i1
-              | otherwise                         = i2
+              | otherwise                          = i2
            i     = gmCode state
 
