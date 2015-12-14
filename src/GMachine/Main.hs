@@ -52,6 +52,15 @@ showInstruction Sub            = iStr  "Sub"
 showInstruction Mul            = iStr  "Mul"
 showInstruction Div            = iStr  "Div"
 showInstruction Neg            = iStr  "Neg"
+showInstruction Eq             = iStr  "Eq"
+showInstruction Ne             = iStr  "Ne"
+showInstruction Lt             = iStr  "Lt"
+showInstruction Le             = iStr  "Le"
+showInstruction Gt             = iStr  "Gt"
+showInstruction Ge             = iStr  "Ge"
+showInstruction (Cond i1 i2)
+   = iConcat [iStr "Cond [2: ", shortShowInstructions 2 i1,
+              iStr ", 1: ",     shortShowInstructions 2 i2, iStr "]"]
 
 showState :: GmState -> Iseq
 showState s

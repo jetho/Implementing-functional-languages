@@ -44,7 +44,7 @@ data Node = NNum Int
           | NAp Addr Addr
           | NGlobal Int GmCode
           | NInd Addr
-          deriving Show
+          deriving (Eq, Show)
 
 
 statIncSteps :: GmStats -> GmStats

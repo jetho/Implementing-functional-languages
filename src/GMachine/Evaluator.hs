@@ -40,6 +40,13 @@ dispatch Sub            = arithmetic2 (-)
 dispatch Mul            = arithmetic2 (*)
 dispatch Div            = arithmetic2 (div)
 dispatch Neg            = arithmetic1 negate
+dispatch Eq             = comparison (==)
+dispatch Ne             = comparison (/=)
+dispatch Lt             = comparison (<)
+dispatch Le             = comparison (<=)
+dispatch Gt             = comparison (>)
+dispatch Ge             = comparison (>=)
+dispatch (Cond i1 i2)   = cond i1 i2
 
 pushGlobal :: Name -> GmState -> GmState
 pushGlobal f state = state { gmStack = addr : gmStack state }
@@ -131,6 +138,12 @@ unboxInteger a state = ub (hLookup (gmHeap state) a)
     where   ub (NNum i) = i
             ub n        = error "Unboxing a non-integer"
 
+boxBoolean :: Bool -> GmState -> GmState
+boxBoolean b state = state { gmStack = a : gmStack state, gmHeap = h' }
+    where   (h',a) = hAlloc (gmHeap state) (NNum b')
+            b' | b                = 1
+               | otherwise        = 0
+
 primitive1 :: (b -> GmState -> GmState)
          -> (Addr -> GmState -> a)
          -> (a -> b)
@@ -151,4 +164,14 @@ arithmetic1 = primitive1 boxInteger unboxInteger
 
 arithmetic2 ::   (Int -> Int -> Int) -> (GmState -> GmState)
 arithmetic2 = primitive2 boxInteger unboxInteger
+
+comparison :: (Int -> Int -> Bool) -> GmState -> GmState
+comparison = primitive2 boxBoolean unboxInteger
+
+cond :: GmCode -> GmCode -> GmState -> GmState
+cond i1 i2 state = state { gmCode = (i'++i), gmStack = s }
+     where (a:s) = gmStack state
+           i' | hLookup (gmHeap state) a == NNum 1 = i1
+              | otherwise                         = i2
+           i     = gmCode state
 
